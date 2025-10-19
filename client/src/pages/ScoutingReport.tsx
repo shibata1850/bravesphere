@@ -434,10 +434,17 @@ export default function ScoutingReport() {
           <TabsContent value="home" className="space-y-8">
             {/* Player Tendencies */}
             <div>
-              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Users className="h-6 w-6 text-primary" />
-                選手別傾向分析
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-bold flex items-center gap-2">
+                  <Users className="h-6 w-6 text-primary" />
+                  選手別傾向分析
+                </h3>
+                <Link href={`/games/${id}/compare?player1=10&player2=23`}>
+                  <Button variant="outline" size="sm">
+                    選手を比較
+                  </Button>
+                </Link>
+              </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {homePlayerTendencies.map(renderPlayerCard)}
               </div>
@@ -512,10 +519,17 @@ export default function ScoutingReport() {
           <TabsContent value="away" className="space-y-8">
             {/* Player Tendencies */}
             <div>
-              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Users className="h-6 w-6 text-primary" />
-                選手別傾向分析
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-bold flex items-center gap-2">
+                  <Users className="h-6 w-6 text-primary" />
+                  選手別傾向分析
+                </h3>
+                <Link href={`/games/${id}/compare?player1=10&player2=23`}>
+                  <Button variant="outline" size="sm">
+                    選手を比較
+                  </Button>
+                </Link>
+              </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {awayPlayerTendencies.map(renderPlayerCard)}
               </div>
