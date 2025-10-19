@@ -15,6 +15,13 @@
       "when": 1760846353624,
       "tag": "0001_boring_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1760850837253,
+      "tag": "0002_careful_leo",
+      "breakpoints": true
     }
   ]
 }

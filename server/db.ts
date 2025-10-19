@@ -27,6 +27,9 @@ import {
   playlistEvents,
   InsertPlaylistEvent,
   PlaylistEvent,
+  pdfSettings,
+  InsertPdfSetting,
+  PdfSetting,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -441,5 +444,38 @@ export async function getPlaylistEventsByPlaylist(
     .from(playlistEvents)
     .where(eq(playlistEvents.playlistId, playlistId))
     .orderBy(playlistEvents.sequenceOrder);
+}
+
+
+// PDF Settings
+export async function savePdfSetting(setting: InsertPdfSetting) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.insert(pdfSettings).values(setting).onDuplicateKeyUpdate({
+    set: {
+      sections: setting.sections,
+      updatedAt: new Date(),
+    },
+  });
+  return result;
+}
+
+export async function getPdfSetting(userId: string, settingType: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db
+    .select()
+    .from(pdfSettings)
+    .where(
+      and(
+        eq(pdfSettings.userId, userId),
+        eq(pdfSettings.settingType, settingType)
+      )
+    )
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
 }
 

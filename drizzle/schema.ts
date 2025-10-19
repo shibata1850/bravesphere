@@ -162,6 +162,19 @@ export const lineups = mysqlTable("lineups", {
 export type Lineup = typeof lineups.$inferSelect;
 export type InsertLineup = typeof lineups.$inferInsert;
 
+// PDF Export Settings
+export const pdfSettings = mysqlTable("pdf_settings", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: varchar("userId", { length: 64 }).notNull(),
+  settingType: varchar("settingType", { length: 64 }).notNull(), // 'scouting' or 'setplay'
+  sections: text("sections").notNull(), // JSON string
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow(),
+});
+
+export type PdfSetting = typeof pdfSettings.$inferSelect;
+export type InsertPdfSetting = typeof pdfSettings.$inferInsert;
+
 /**
  * Playlists table - プレイリスト情報（得点シーン等）
  */

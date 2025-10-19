@@ -7,10 +7,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Users, TrendingUp, Shield, Zap, Target, AlertCircle, CheckCircle2, Download, Settings } from "lucide-react";
+import { ArrowLeft, Users, TrendingUp, Shield, Zap, Target, AlertCircle, CheckCircle2, Download, Settings, Save } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface PlayerTendency {
   name: string;
@@ -51,6 +51,27 @@ export default function ScoutingReport() {
     keyMatchups: true,
   });
 
+  // 保存された設定を読み込み
+  const { data: savedSettings } = trpc.pdfSettings.get.useQuery(
+    { settingType: "scouting" },
+    { enabled: isDialogOpen }
+  );
+
+  useEffect(() => {
+    if (savedSettings?.sections) {
+      setSelectedSections(savedSettings.sections);
+    }
+  }, [savedSettings]);
+
+  const saveSettings = trpc.pdfSettings.save.useMutation({
+    onSuccess: () => {
+      toast.success("設定を保存しました");
+    },
+    onError: () => {
+      toast.error("設定の保存に失敗しました");
+    },
+  });
+
   const exportPDF = trpc.pdf.generateScoutingReport.useMutation({
     onSuccess: (data) => {
       toast.success("スカウティングレポートPDFを生成しました");
@@ -61,6 +82,13 @@ export default function ScoutingReport() {
       toast.error("PDF生成に失敗しました");
     },
   });
+
+  const handleSaveSettings = () => {
+    saveSettings.mutate({
+      settingType: "scouting",
+      sections: selectedSections,
+    });
+  };
 
   const handleExportPDF = () => {
     const selectedCount = Object.values(selectedSections).filter(Boolean).length;
@@ -363,7 +391,16 @@ export default function ScoutingReport() {
                   </Label>
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="flex gap-2">
+                <Button 
+                  variant="outline"
+                  onClick={handleSaveSettings}
+                  disabled={saveSettings.isPending}
+                  className="gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {saveSettings.isPending ? "保存中..." : "設定を保存"}
+                </Button>
                 <Button 
                   onClick={handleExportPDF}
                   disabled={exportPDF.isPending}

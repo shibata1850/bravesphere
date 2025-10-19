@@ -448,6 +448,41 @@ export const appRouter = router({
       }),
   }),
 
+  // PDF Settings
+  pdfSettings: router({
+    save: protectedProcedure
+      .input(z.object({
+        settingType: z.string(),
+        sections: z.object({
+          playerTendencies: z.boolean().optional(),
+          setPlays: z.boolean().optional(),
+          blobSlob: z.boolean().optional(),
+          teamStrategy: z.boolean().optional(),
+          keyMatchups: z.boolean().optional(),
+        }),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const id = `${ctx.user.id}-${input.settingType}`;
+        await db.savePdfSetting({
+          id,
+          userId: ctx.user.id,
+          settingType: input.settingType,
+          sections: JSON.stringify(input.sections),
+        });
+        return { success: true };
+      }),
+    get: protectedProcedure
+      .input(z.object({ settingType: z.string() }))
+      .query(async ({ ctx, input }) => {
+        const setting = await db.getPdfSetting(ctx.user.id, input.settingType);
+        if (!setting) return null;
+        return {
+          ...setting,
+          sections: JSON.parse(setting.sections),
+        };
+      }),
+  }),
+
   // PDF Export
   pdf: router({
     generateSetPlayReport: protectedProcedure
