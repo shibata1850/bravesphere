@@ -447,6 +447,16 @@ export const appRouter = router({
         return lineup;
       }),
   }),
+
+  // PDF Export
+  pdf: router({
+    generateSetPlayReport: protectedProcedure
+      .input(z.object({ gameId: z.string() }))
+      .mutation(async ({ input }) => {
+        // PDF生成ロジック（後で実装）
+        return { success: true, url: "/reports/setplay-report.pdf" };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

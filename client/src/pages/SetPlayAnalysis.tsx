@@ -4,8 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Target, AlertTriangle, CheckCircle2, Clock, MapPin, Users, TrendingUp } from "lucide-react";
+import { ArrowLeft, Target, AlertTriangle, CheckCircle2, Clock, MapPin, Users, TrendingUp, Download } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { toast } from "sonner";
 
 interface SetPlayDetail {
   name: string;
@@ -45,6 +46,21 @@ export default function SetPlayAnalysis() {
     { id: game?.awayTeamId || "" },
     { enabled: !!game?.awayTeamId }
   );
+
+  const exportPDF = trpc.pdf.generateSetPlayReport.useMutation({
+    onSuccess: (data) => {
+      toast.success("PDFを生成しました");
+      // PDFダウンロード処理
+      window.open(data.url, "_blank");
+    },
+    onError: () => {
+      toast.error("PDF生成に失敗しました");
+    },
+  });
+
+  const handleExportPDF = () => {
+    exportPDF.mutate({ gameId: id! });
+  };
 
   const homeSetPlays: SetPlayDetail[] = [
     {
@@ -472,22 +488,32 @@ export default function SetPlayAnalysis() {
       </header>
 
       <main className="container py-12">
-        <div className="flex items-center gap-4 mb-8">
-          <Link href={`/games/${id}/scouting`}>
-            <Button variant="ghost" size="icon" className="h-10 w-10">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h2 className="text-4xl font-bold mb-2">セットプレイ詳細分析</h2>
-            <p className="text-lg text-muted-foreground">
-              {game && new Date(game.gameDate).toLocaleDateString("ja-JP", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link href={`/games/${id}/scouting`}>
+              <Button variant="ghost" size="icon" className="h-10 w-10">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div>
+              <h2 className="text-4xl font-bold mb-2">セットプレイ詳細分析</h2>
+              <p className="text-lg text-muted-foreground">
+                {game && new Date(game.gameDate).toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
           </div>
+          <Button 
+            onClick={handleExportPDF} 
+            className="gap-2"
+            disabled={exportPDF.isPending}
+          >
+            <Download className="h-4 w-4" />
+            {exportPDF.isPending ? "生成中..." : "PDFでエクスポート"}
+          </Button>
         </div>
 
         <Tabs defaultValue="home" className="space-y-6">
