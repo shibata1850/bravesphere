@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, BarChart3, Target, TrendingUp, Users as UsersIcon, Crosshair } from "lucide-react";
+import { ArrowLeft, BarChart3, Target, TrendingUp, Users as UsersIcon, Crosshair, Shield } from "lucide-react";
 import { Link, useParams } from "wouter";
 
 export default function AnalysisResult() {
@@ -368,6 +368,27 @@ export default function AnalysisResult() {
               <Link href={`/games/${id}/fourfactors`}>
                 <Button size="lg" variant="outline" className="w-full text-lg h-14">
                   4ファクターを見る
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8">
+          <Card className="border-2 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950">
+            <CardHeader>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Shield className="h-6 w-6 text-purple-600" />
+                スカウティングレポート
+              </CardTitle>
+              <CardDescription className="text-base">
+                戦術・傾向・セットプレー分析
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href={`/games/${id}/scouting`}>
+                <Button size="lg" variant="outline" className="w-full text-lg h-14">
+                  スカウティングレポートを見る
                 </Button>
               </Link>
             </CardContent>
