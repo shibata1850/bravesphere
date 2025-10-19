@@ -22,6 +22,7 @@ import { trpc } from "@/lib/trpc";
 import { Plus, Video } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
+import { APP_LOGO, APP_TITLE } from "@/const";
 import { toast } from "sonner";
 
 export default function Games() {
@@ -74,7 +75,7 @@ export default function Games() {
     <div className="min-h-screen bg-background">
       <header className="border-b">
         <div className="container flex h-16 items-center justify-between">
-          <h1 className="text-2xl font-bold">試合一覧</h1>
+          <Link href="/"><div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">{APP_LOGO && <img src={APP_LOGO} alt={APP_TITLE} className="h-12 w-12" />}<h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{APP_TITLE}</h1></div></Link>
           <nav className="flex gap-4">
             <Link href="/dashboard">
               <Button variant="ghost">ダッシュボード</Button>

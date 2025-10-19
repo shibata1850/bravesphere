@@ -172,3 +172,11 @@
     }
   }
 }
+
+  /* Grid pattern background */
+  .bg-grid-pattern {
+    background-image: linear-gradient(to right, oklch(0.5 0.1 264 / 0.1) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.5 0.1 264 / 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
