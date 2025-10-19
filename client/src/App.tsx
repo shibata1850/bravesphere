@@ -11,6 +11,8 @@ import TeamDetail from "./pages/TeamDetail";
 import Games from "./pages/Games";
 import GameDetail from "./pages/GameDetail";
 import Analysis from "./pages/Analysis";
+import AnalysisResult from "./pages/AnalysisResult";
+import ShotChart from "./pages/ShotChart";
 
 function Router() {
   return (
@@ -21,7 +23,8 @@ function Router() {
       <Route path={"/teams/:id"} component={TeamDetail} />
       <Route path={"/games"} component={Games} />
       <Route path={"/games/:id"} component={GameDetail} />
-      <Route path={"/games/:id/analysis"} component={Analysis} />
+      <Route path="/games/:id/analysis" component={AnalysisResult} />
+      <Route path="/games/:id/shotchart" component={ShotChart} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
