@@ -352,6 +352,27 @@ export default function AnalysisResult() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="mt-8">
+          <Card className="border-2 bg-gradient-to-br from-blue-50 to-green-50 dark:from-blue-950 dark:to-green-950">
+            <CardHeader>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Target className="h-6 w-6 text-blue-600" />
+                4ファクター分析
+              </CardTitle>
+              <CardDescription className="text-base">
+                勝敗を決める4つの重要指標
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href={`/games/${id}/fourfactors`}>
+                <Button size="lg" variant="outline" className="w-full text-lg h-14">
+                  4ファクターを見る
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );
