@@ -191,6 +191,27 @@ export const trainingLogs = mysqlTable("training_logs", {
 export type TrainingLog = typeof trainingLogs.$inferSelect;
 export type InsertTrainingLog = typeof trainingLogs.$inferInsert;
 
+// チーム練習メニュー
+export const teamPractices = mysqlTable("team_practices", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  teamId: varchar("teamId", { length: 64 }).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  practiceDate: timestamp("practiceDate").notNull(),
+  duration: int("duration").notNull(), // 分単位
+  location: varchar("location", { length: 255 }),
+  focus: varchar("focus", { length: 100 }), // オフェンス、ディフェンス、フィジカル等
+  drills: text("drills"), // JSON形式でドリル情報を保存
+  attendance: text("attendance"), // JSON形式で出席状況を保存
+  notes: text("notes"),
+  createdBy: varchar("createdBy", { length: 64 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export type TeamPractice = typeof teamPractices.$inferSelect;
+export type InsertTeamPractice = typeof teamPractices.$inferInsert;
+
 // 測定記録テーブル
 export const measurements = mysqlTable("measurements", {
   id: varchar("id", { length: 64 }).primaryKey(),

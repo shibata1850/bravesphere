@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { Plus, Users, ArrowLeft } from "lucide-react";
+import { Plus, Users, ArrowLeft, Calendar } from "lucide-react";
 import { useState } from "react";
 import { Link } from "wouter";
 import { toast } from "sonner";
@@ -152,6 +152,12 @@ export default function Teams() {
                     <Link href={`/teams/${team.id}/evolution`}>
                       <Button variant="outline" size="sm" className="w-full">
                         チーム進化グラフを見る
+                  <Link href={`/teams/${team.id}/practice`}>
+                    <Button variant="outline" className="w-full">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      練習メニュー
+                    </Button>
+                  </Link>
                       </Button>
                     </Link>
                     <p className="text-sm text-muted-foreground">
