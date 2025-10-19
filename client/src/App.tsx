@@ -18,6 +18,7 @@ import FourFactors from "./pages/FourFactors";
 import ScoutingReport from "./pages/ScoutingReport";
 import SetPlayAnalysis from "./pages/SetPlayAnalysis";
 import TacticalPlan from "./pages/TacticalPlan";
+import PlayerAnalysis from "./pages/PlayerAnalysis";
 
 function Router() {
   return (
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/games/:id/scouting" component={ScoutingReport} />
       <Route path="/games/:id/setplays" component={SetPlayAnalysis} />
       <Route path="/games/:id/tactics" component={TacticalPlan} />
+      <Route path="/games/:id/players/:playerId" component={PlayerAnalysis} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

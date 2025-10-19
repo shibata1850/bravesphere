@@ -190,6 +190,7 @@ export default function ScoutingReport() {
   ];
 
   const renderPlayerCard = (player: PlayerTendency) => (
+    <Link href={`/games/${id}/players/${player.number}`}>
     <Card key={player.number} className="border-2">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -242,6 +243,7 @@ export default function ScoutingReport() {
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 
   const renderSetPlay = (play: SetPlay) => (
