@@ -491,6 +491,12 @@ export const appRouter = router({
         // PDF生成ロジック（後で実装）
         return { success: true, url: "/reports/setplay-report.pdf" };
       }),
+    generateTacticalPlan: protectedProcedure
+      .input(z.object({ gameId: z.string() }))
+      .mutation(async ({ input }) => {
+        // 戦術案PDF生成ロジック
+        return { success: true, url: "/reports/tactical-plan.pdf" };
+      }),
     generateScoutingReport: protectedProcedure
       .input(z.object({ 
         gameId: z.string(),

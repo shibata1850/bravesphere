@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Users, TrendingUp, Shield, Zap, Target, AlertCircle, CheckCircle2, Download, Settings, Save } from "lucide-react";
+import { ArrowLeft, Users, TrendingUp, Shield, Zap, Target, AlertCircle, CheckCircle2, Download, Settings, Save, Lightbulb } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -325,7 +325,14 @@ export default function ScoutingReport() {
               </p>
             </div>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <div className="flex gap-2">
+            <Link href={`/games/${id}/tactics`}>
+              <Button variant="outline" className="gap-2">
+                <Lightbulb className="h-4 w-4" />
+                戦術案を見る
+              </Button>
+            </Link>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Settings className="h-4 w-4" />
@@ -411,7 +418,8 @@ export default function ScoutingReport() {
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
         <Tabs defaultValue="home" className="space-y-6">
