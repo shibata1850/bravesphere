@@ -503,9 +503,29 @@ export const appRouter = router({
         }).optional(),
       }))
       .mutation(async ({ input }) => {
-        // PDF生成ロジック（後で実装）
-        // input.sectionsを使って選択された項目だけをPDFに含める
-        return { success: true, url: "/reports/scouting-report.pdf" };
+        // 試合とチーム情報を取得
+        const game = await db.getGame(input.gameId);
+        if (!game) {
+          throw new Error("Game not found");
+        }
+        
+        const homeTeam = await db.getTeam(game.homeTeamId);
+        const awayTeam = await db.getTeam(game.awayTeamId);
+        
+        if (!homeTeam || !awayTeam) {
+          throw new Error("Teams not found");
+        }
+        
+        // PDF生成
+        const { generateScoutingReportPDF } = await import("./pdfGenerator");
+        const url = await generateScoutingReportPDF(
+          game,
+          homeTeam,
+          awayTeam,
+          input.sections || {}
+        );
+        
+        return { success: true, url };
       }),
   }),
 });
