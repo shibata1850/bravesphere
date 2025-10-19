@@ -312,10 +312,17 @@ export default function ScoutingReport() {
 
             {/* Set Plays */}
             <div>
-              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Target className="h-6 w-6 text-blue-600" />
-                セットプレー分析
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-bold flex items-center gap-2">
+                  <Target className="h-6 w-6 text-blue-600" />
+                  セットプレー分析
+                </h3>
+                <Link href={`/games/${id}/setplays`}>
+                  <Button variant="outline" size="sm">
+                    詳細分析を見る
+                  </Button>
+                </Link>
+              </div>
               <div className="grid md:grid-cols-2 gap-4">
                 {homeSetPlays.map(renderSetPlay)}
               </div>
@@ -362,10 +369,17 @@ export default function ScoutingReport() {
 
             {/* Set Plays */}
             <div>
-              <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Target className="h-6 w-6 text-blue-600" />
-                セットプレー分析
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-bold flex items-center gap-2">
+                  <Target className="h-6 w-6 text-blue-600" />
+                  セットプレー分析
+                </h3>
+                <Link href={`/games/${id}/setplays`}>
+                  <Button variant="outline" size="sm">
+                    詳細分析を見る
+                  </Button>
+                </Link>
+              </div>
               <div className="grid md:grid-cols-2 gap-4">
                 {awaySetPlays.map(renderSetPlay)}
               </div>
