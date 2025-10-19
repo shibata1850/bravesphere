@@ -457,9 +457,19 @@ export const appRouter = router({
         return { success: true, url: "/reports/setplay-report.pdf" };
       }),
     generateScoutingReport: protectedProcedure
-      .input(z.object({ gameId: z.string() }))
+      .input(z.object({ 
+        gameId: z.string(),
+        sections: z.object({
+          playerTendencies: z.boolean().optional(),
+          setPlays: z.boolean().optional(),
+          blobSlob: z.boolean().optional(),
+          teamStrategy: z.boolean().optional(),
+          keyMatchups: z.boolean().optional(),
+        }).optional(),
+      }))
       .mutation(async ({ input }) => {
         // PDF生成ロジック（後で実装）
+        // input.sectionsを使って選択された項目だけをPDFに含める
         return { success: true, url: "/reports/scouting-report.pdf" };
       }),
   }),

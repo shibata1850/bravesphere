@@ -2,11 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Users, TrendingUp, Shield, Zap, Target, AlertCircle, CheckCircle2, Download } from "lucide-react";
+import { ArrowLeft, Users, TrendingUp, Shield, Zap, Target, AlertCircle, CheckCircle2, Download, Settings } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface PlayerTendency {
   name: string;
@@ -38,10 +42,20 @@ export default function ScoutingReport() {
     { enabled: !!game?.awayTeamId }
   );
 
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedSections, setSelectedSections] = useState({
+    playerTendencies: true,
+    setPlays: true,
+    blobSlob: true,
+    teamStrategy: true,
+    keyMatchups: true,
+  });
+
   const exportPDF = trpc.pdf.generateScoutingReport.useMutation({
     onSuccess: (data) => {
       toast.success("スカウティングレポートPDFを生成しました");
       window.open(data.url, "_blank");
+      setIsDialogOpen(false);
     },
     onError: () => {
       toast.error("PDF生成に失敗しました");
@@ -49,7 +63,22 @@ export default function ScoutingReport() {
   });
 
   const handleExportPDF = () => {
-    exportPDF.mutate({ gameId: id! });
+    const selectedCount = Object.values(selectedSections).filter(Boolean).length;
+    if (selectedCount === 0) {
+      toast.error("少なくとも1つの項目を選択してください");
+      return;
+    }
+    exportPDF.mutate({ 
+      gameId: id!,
+      sections: selectedSections,
+    });
+  };
+
+  const toggleSection = (section: keyof typeof selectedSections) => {
+    setSelectedSections(prev => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
   // サンプルデータ - ホームチーム
@@ -67,109 +96,68 @@ export default function ScoutingReport() {
       name: "佐藤 次郎",
       number: 23,
       position: "SG",
-      strengths: ["ミドルレンジ", "カットプレー", "リバウンド"],
-      weaknesses: ["3Pシュート", "ボールハンドリング"],
-      shotPreference: "エルボー付近のミドル",
+      strengths: ["スピード", "ミドルレンジ", "カット"],
+      weaknesses: ["3Pシュート", "ディフェンス"],
+      shotPreference: "エルボー付近のプルアップ",
       defensiveRole: "オフボールディフェンス",
     },
     {
-      name: "鈴木 三郎",
-      number: 7,
-      position: "SF",
-      strengths: ["ドライブ", "フィニッシュ", "トランジション"],
-      weaknesses: ["外角シュート", "ディフェンス"],
-      shotPreference: "ペイントアタック",
-      defensiveRole: "ヘルプディフェンス",
+      name: "伊藤 五郎",
+      number: 32,
+      position: "C",
+      strengths: ["リバウンド", "ポストプレー", "ブロック"],
+      weaknesses: ["スピード", "フリースロー"],
+      shotPreference: "ペイント内のフック",
+      defensiveRole: "リムプロテクター",
     },
   ];
 
+  const homeSetPlays: SetPlay[] = [
+    {
+      name: "Horns Flex",
+      frequency: "高頻度（試合中15-20回）",
+      description: "ホーンズフォーメーションからのフレックスカット。#23がベースラインをカットし、#15がトップで3Pを狙う。",
+      keyPlayers: ["#10 田中", "#23 佐藤", "#15 高橋"],
+      counters: ["スイッチディフェンス", "ハイポストプレッシャー", "ダウンスクリーンのファイトオーバー"],
+    },
+    {
+      name: "Spain Pick & Roll",
+      frequency: "中頻度（試合中8-12回）",
+      description: "ピック&ロールにバックスクリーンを組み合わせた高度なプレー。クラッチタイムに多用。",
+      keyPlayers: ["#10 田中", "#32 伊藤", "#23 佐藤"],
+      counters: ["バックスクリーン警戒", "ブリッツ（トラップ）"],
+    },
+  ];
+
+  // サンプルデータ - アウェイチーム
   const awayPlayerTendencies: PlayerTendency[] = [
     {
       name: "山田 一郎",
       number: 5,
       position: "PG",
-      strengths: ["スピード", "ピック&ロール", "ペネトレーション"],
-      weaknesses: ["3Pシュート", "ターンオーバー"],
-      shotPreference: "フローター、レイアップ",
-      defensiveRole: "プレッシャーディフェンス",
+      strengths: ["ドライブ", "パス", "リーダーシップ"],
+      weaknesses: ["3Pシュート", "ディフェンス"],
+      shotPreference: "ペイントアタック",
+      defensiveRole: "オンボールプレッシャー",
     },
     {
       name: "中村 二郎",
       number: 15,
-      position: "C",
-      strengths: ["ポストプレー", "リバウンド", "ブロック"],
-      weaknesses: ["機動力", "フリースロー"],
-      shotPreference: "ローポスト",
-      defensiveRole: "リムプロテクター",
-    },
-  ];
-
-  // セットプレー
-  const homeSetPlays: SetPlay[] = [
-    {
-      name: "Horns Flex",
-      frequency: "高頻度（Q1, Q3開始時）",
-      description: "ハイポストから始まるフレックスオフェンス。#10がトップでボールを受け、#23と#7がフレックスカット。",
-      keyPlayers: ["田中 太郎 (#10)", "佐藤 次郎 (#23)"],
-      counters: ["スイッチディフェンス", "ハイポストへのプレッシャー"],
-    },
-    {
-      name: "Zipper Screen",
-      frequency: "中頻度（サイドアウト時）",
-      description: "ジッパーカットでPGがボールを受け、ウイングへの展開。3Pシュートを狙う。",
-      keyPlayers: ["田中 太郎 (#10)"],
-      counters: ["スクリーンへのファイトオーバー", "ウイングへのクローズアウト"],
-    },
-    {
-      name: "Spain Pick & Roll",
-      frequency: "低頻度（クラッチタイム）",
-      description: "スペインピック&ロール。バックスクリーンでロールマンをフリーに。",
-      keyPlayers: ["田中 太郎 (#10)", "伊藤 五郎 (#32)"],
-      counters: ["バックスクリーンへの警戒", "ヘルプローテーション"],
+      position: "PF",
+      strengths: ["リバウンド", "ミドルレンジ", "スクリーン"],
+      weaknesses: ["スピード", "3Pシュート"],
+      shotPreference: "エルボーからのジャンパー",
+      defensiveRole: "ヘルプディフェンス",
     },
   ];
 
   const awaySetPlays: SetPlay[] = [
     {
-      name: "High Pick & Roll",
-      frequency: "高頻度（全クォーター）",
-      description: "トップでのピック&ロール。#5のスピードを活かしたペネトレーション。",
-      keyPlayers: ["山田 一郎 (#5)", "中村 二郎 (#15)"],
-      counters: ["アンダースクリーン", "ドロップカバレッジ"],
-    },
-    {
-      name: "Elbow Entry Post Up",
-      frequency: "中頻度（ハーフコート時）",
-      description: "エルボーからのポストエントリー。#15のポストプレーから展開。",
-      keyPlayers: ["中村 二郎 (#15)"],
-      counters: ["フロントディフェンス", "ダブルチーム"],
-    },
-  ];
-
-  // BLOB/SLOB
-  const homeBlobSlob = [
-    {
-      type: "BLOB",
-      name: "Box Zipper",
-      description: "ボックスフォーメーションからジッパーカット。#10が3Pを狙う。",
-    },
-    {
-      type: "SLOB",
-      name: "Floppy",
-      description: "フロッピーアクション。#23がダブルスクリーンで3P。",
-    },
-  ];
-
-  const awayBlobSlob = [
-    {
-      type: "BLOB",
-      name: "Stack Lob",
-      description: "スタックからロブパス。#15がリムアタック。",
-    },
-    {
-      type: "SLOB",
-      name: "Elevator Screen",
-      description: "エレベータースクリーン。シューターをフリーに。",
+      name: "High Pick & Roll (Spread)",
+      frequency: "高頻度（試合中20-25回）",
+      description: "1-4スプレッドからのシンプルなピック&ロール。#5のドライブ能力を最大限活用。",
+      keyPlayers: ["#5 山田", "#15 中村"],
+      counters: ["アンダースクリーン", "スイッチ&リカバー", "ブリッツ"],
     },
   ];
 
@@ -180,78 +168,81 @@ export default function ScoutingReport() {
           <CardTitle className="text-xl">
             #{player.number} {player.name}
           </CardTitle>
-          <Badge variant="outline" className="text-sm">
-            {player.position}
-          </Badge>
+          <Badge variant="secondary">{player.position}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2 text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
             強み
           </h4>
           <div className="flex flex-wrap gap-2">
             {player.strengths.map((s, idx) => (
-              <Badge key={idx} className="bg-green-100 text-green-700 hover:bg-green-100">
+              <Badge key={idx} variant="default" className="text-xs">
                 {s}
               </Badge>
             ))}
           </div>
         </div>
         <div>
-          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-red-600" />
+          <h4 className="text-sm font-semibold mb-2 flex items-center gap-2 text-red-600">
+            <AlertCircle className="h-4 w-4" />
             弱み
           </h4>
           <div className="flex flex-wrap gap-2">
             {player.weaknesses.map((w, idx) => (
-              <Badge key={idx} className="bg-red-100 text-red-700 hover:bg-red-100">
+              <Badge key={idx} variant="destructive" className="text-xs">
                 {w}
               </Badge>
             ))}
           </div>
         </div>
-        <div className="pt-2 border-t space-y-2">
-          <div className="text-sm">
-            <span className="font-semibold">シュート傾向: </span>
-            <span className="text-muted-foreground">{player.shotPreference}</span>
-          </div>
-          <div className="text-sm">
-            <span className="font-semibold">守備役割: </span>
-            <span className="text-muted-foreground">{player.defensiveRole}</span>
-          </div>
+        <div>
+          <h4 className="text-sm font-semibold mb-1 flex items-center gap-2">
+            <Target className="h-4 w-4 text-primary" />
+            シュート傾向
+          </h4>
+          <p className="text-sm text-muted-foreground">{player.shotPreference}</p>
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold mb-1 flex items-center gap-2">
+            <Shield className="h-4 w-4 text-primary" />
+            守備役割
+          </h4>
+          <p className="text-sm text-muted-foreground">{player.defensiveRole}</p>
         </div>
       </CardContent>
     </Card>
   );
 
-  const renderSetPlay = (play: SetPlay, idx: number) => (
-    <Card key={idx} className="border-2">
+  const renderSetPlay = (play: SetPlay) => (
+    <Card key={play.name} className="border-2">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{play.name}</CardTitle>
-          <Badge variant="secondary">{play.frequency}</Badge>
-        </div>
+        <CardTitle className="text-lg">{play.name}</CardTitle>
+        <CardDescription>{play.frequency}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">{play.description}</p>
         <div>
-          <h5 className="text-sm font-semibold mb-2">キープレーヤー:</h5>
+          <h4 className="text-sm font-semibold mb-1">説明</h4>
+          <p className="text-sm text-muted-foreground">{play.description}</p>
+        </div>
+        <div>
+          <h4 className="text-sm font-semibold mb-2">キープレーヤー</h4>
           <div className="flex flex-wrap gap-2">
-            {play.keyPlayers.map((p, i) => (
-              <Badge key={i} variant="outline">
+            {play.keyPlayers.map((p, idx) => (
+              <Badge key={idx} variant="secondary" className="text-xs">
                 {p}
               </Badge>
             ))}
           </div>
         </div>
         <div>
-          <h5 className="text-sm font-semibold mb-2 text-orange-600">対策:</h5>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            {play.counters.map((c, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="text-orange-600">•</span>
+          <h4 className="text-sm font-semibold mb-2 text-orange-600">対策</h4>
+          <ul className="space-y-1">
+            {play.counters.map((c, idx) => (
+              <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                <span className="text-orange-600 mt-1">•</span>
                 {c}
               </li>
             ))}
@@ -293,27 +284,97 @@ export default function ScoutingReport() {
             <Link href={`/games/${id}/analysis`}>
               <Button variant="ghost" size="icon" className="h-10 w-10">
                 <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h2 className="text-4xl font-bold mb-2">スカウティングレポート</h2>
-            <p className="text-lg text-muted-foreground">
-              {game && new Date(game.gameDate).toLocaleDateString("ja-JP", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
+              </Button>
+            </Link>
+            <div>
+              <h2 className="text-4xl font-bold mb-2">スカウティングレポート</h2>
+              <p className="text-lg text-muted-foreground">
+                {game && new Date(game.gameDate).toLocaleDateString("ja-JP", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
           </div>
-          </div>
-          <Button 
-            onClick={handleExportPDF} 
-            className="gap-2"
-            disabled={exportPDF.isPending}
-          >
-            <Download className="h-4 w-4" />
-            {exportPDF.isPending ? "生成中..." : "PDFでエクスポート"}
-          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Settings className="h-4 w-4" />
+                PDF出力設定
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>PDF出力項目の選択</DialogTitle>
+                <DialogDescription>
+                  レポートに含める項目を選択してください
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="playerTendencies" 
+                    checked={selectedSections.playerTendencies}
+                    onCheckedChange={() => toggleSection('playerTendencies')}
+                  />
+                  <Label htmlFor="playerTendencies" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    選手別傾向分析
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="setPlays" 
+                    checked={selectedSections.setPlays}
+                    onCheckedChange={() => toggleSection('setPlays')}
+                  />
+                  <Label htmlFor="setPlays" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    セットプレー分析
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="blobSlob" 
+                    checked={selectedSections.blobSlob}
+                    onCheckedChange={() => toggleSection('blobSlob')}
+                  />
+                  <Label htmlFor="blobSlob" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    BLOB/SLOB分析
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="teamStrategy" 
+                    checked={selectedSections.teamStrategy}
+                    onCheckedChange={() => toggleSection('teamStrategy')}
+                  />
+                  <Label htmlFor="teamStrategy" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    チーム戦略
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="keyMatchups" 
+                    checked={selectedSections.keyMatchups}
+                    onCheckedChange={() => toggleSection('keyMatchups')}
+                  />
+                  <Label htmlFor="keyMatchups" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    重要マッチアップ
+                  </Label>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  onClick={handleExportPDF}
+                  disabled={exportPDF.isPending}
+                  className="gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  {exportPDF.isPending ? "生成中..." : "PDFを生成"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <Tabs defaultValue="home" className="space-y-6">
@@ -356,25 +417,46 @@ export default function ScoutingReport() {
             {/* BLOB/SLOB */}
             <div>
               <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Zap className="h-6 w-6 text-orange-600" />
-                BLOB / SLOB
+                <Zap className="h-6 w-6 text-yellow-600" />
+                BLOB/SLOB分析
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
-                {homeBlobSlob.map((play, idx) => (
-                  <Card key={idx} className="border-2">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{play.name}</CardTitle>
-                        <Badge variant={play.type === "BLOB" ? "default" : "secondary"}>
-                          {play.type}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{play.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle className="text-lg">BLOB: Box Set</CardTitle>
+                    <CardDescription>ベースラインアウトオブバウンズ</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      ボックスフォーメーションから#32がスクリーンを使ってゴール下へカット。高確率でレイアップ。
+                    </p>
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold">対策</h4>
+                      <ul className="space-y-1">
+                        <li className="text-sm text-muted-foreground">• スクリーンをスイッチ</li>
+                        <li className="text-sm text-muted-foreground">• #32をフロントガード</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle className="text-lg">SLOB: Stagger Screen</CardTitle>
+                    <CardDescription>サイドラインアウトオブバウンズ</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      スタガースクリーンで#15が3Pシュート。タイムアウト後に多用。
+                    </p>
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold">対策</h4>
+                      <ul className="space-y-1">
+                        <li className="text-sm text-muted-foreground">• スクリーンをファイトオーバー</li>
+                        <li className="text-sm text-muted-foreground">• #15を早めにマーク</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </TabsContent>
@@ -384,7 +466,7 @@ export default function ScoutingReport() {
             {/* Player Tendencies */}
             <div>
               <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Users className="h-6 w-6 text-accent" />
+                <Users className="h-6 w-6 text-primary" />
                 選手別傾向分析
               </h3>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -413,25 +495,28 @@ export default function ScoutingReport() {
             {/* BLOB/SLOB */}
             <div>
               <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                <Zap className="h-6 w-6 text-orange-600" />
-                BLOB / SLOB
+                <Zap className="h-6 w-6 text-yellow-600" />
+                BLOB/SLOB分析
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
-                {awayBlobSlob.map((play, idx) => (
-                  <Card key={idx} className="border-2">
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">{play.name}</CardTitle>
-                        <Badge variant={play.type === "BLOB" ? "default" : "secondary"}>
-                          {play.type}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">{play.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+                <Card className="border-2">
+                  <CardHeader>
+                    <CardTitle className="text-lg">BLOB: Elevator Screen</CardTitle>
+                    <CardDescription>ベースラインアウトオブバウンズ</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      エレベータースクリーンで#8が3Pシュート。クラッチタイムに使用。
+                    </p>
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold">対策</h4>
+                      <ul className="space-y-1">
+                        <li className="text-sm text-muted-foreground">• スクリーンを早めに察知</li>
+                        <li className="text-sm text-muted-foreground">• #8へのクローズアウト</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </TabsContent>
