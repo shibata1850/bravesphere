@@ -149,6 +149,11 @@ export default function Teams() {
                     </div>
                   </CardHeader>
                   <CardContent>
+                    <Link href={`/teams/${team.id}/evolution`}>
+                      <Button variant="outline" size="sm" className="w-full">
+                        チーム進化グラフを見る
+                      </Button>
+                    </Link>
                     <p className="text-sm text-muted-foreground">
                       作成日: {new Date(team.createdAt!).toLocaleDateString("ja-JP")}
                     </p>

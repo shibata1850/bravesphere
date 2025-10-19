@@ -21,6 +21,7 @@ import TacticalPlan from "./pages/TacticalPlan";
 import PlayerAnalysis from "./pages/PlayerAnalysis";
 import PlayerComparison from "./pages/PlayerComparison";
 import TrainingPlan from "./pages/TrainingPlan";
+import TeamEvolution from "./pages/TeamEvolution";
 
 function Router() {
   return (
@@ -41,6 +42,7 @@ function Router() {
       <Route path="/games/:id/players/:playerId" component={PlayerAnalysis} />
       <Route path="/games/:id/compare" component={PlayerComparison} />
       <Route path="/games/:id/training/:playerId" component={TrainingPlan} />
+      <Route path="/teams/:teamId/evolution" component={TeamEvolution} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
