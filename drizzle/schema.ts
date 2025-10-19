@@ -175,6 +175,36 @@ export const pdfSettings = mysqlTable("pdf_settings", {
 export type PdfSetting = typeof pdfSettings.$inferSelect;
 export type InsertPdfSetting = typeof pdfSettings.$inferInsert;
 
+// トレーニング記録テーブル
+export const trainingLogs = mysqlTable("training_logs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  playerId: varchar("playerId", { length: 64 }).notNull(),
+  drillName: varchar("drillName", { length: 255 }).notNull(),
+  date: timestamp("date").notNull(),
+  completed: boolean("completed").default(false).notNull(),
+  duration: int("duration"), // 分単位
+  successRate: int("successRate"), // パーセンテージ
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type TrainingLog = typeof trainingLogs.$inferSelect;
+export type InsertTrainingLog = typeof trainingLogs.$inferInsert;
+
+// 測定記録テーブル
+export const measurements = mysqlTable("measurements", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  playerId: varchar("playerId", { length: 64 }).notNull(),
+  date: timestamp("date").notNull(),
+  metricName: varchar("metricName", { length: 255 }).notNull(), // 例: "ミドルレンジFG%", "リバウンド数"
+  value: int("value").notNull(), // 実際の値（小数点は整数化して保存）
+  unit: varchar("unit", { length: 50 }), // 単位（%、回、など）
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type Measurement = typeof measurements.$inferSelect;
+export type InsertMeasurement = typeof measurements.$inferInsert;
+
 /**
  * Playlists table - プレイリスト情報（得点シーン等）
  */

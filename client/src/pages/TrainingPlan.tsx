@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { APP_LOGO, APP_TITLE } from "@/const";
-import { ArrowLeft, Target, TrendingUp, Clock, Dumbbell, CheckCircle2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Target, TrendingUp, Clock, Dumbbell, CheckCircle2, AlertCircle, BarChart3 } from "lucide-react";
 import { Link, useParams, useLocation } from "wouter";
 
 interface WeaknessArea {
@@ -230,12 +230,18 @@ export default function TrainingPlan() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div>
+          <div className="flex-1">
             <h2 className="text-4xl font-bold mb-2">個別トレーニングプログラム</h2>
             <p className="text-lg text-muted-foreground">
               {program.playerName} 専用の強化メニュー
             </p>
           </div>
+          <Link href={`/players/${playerId}/progress`}>
+            <Button variant="outline">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              進捗を追跡
+            </Button>
+          </Link>
         </div>
 
         {/* 弱点分析 */}
