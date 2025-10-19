@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, BarChart3, Target, TrendingUp, Users, Crosshair } from "lucide-react";
+import { ArrowLeft, BarChart3, Target, TrendingUp, Users as UsersIcon, Crosshair } from "lucide-react";
 import { Link, useParams } from "wouter";
 
 export default function AnalysisResult() {
@@ -127,7 +127,7 @@ export default function AnalysisResult() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-muted-foreground">アシスト</CardTitle>
-                <Users className="h-5 w-5 text-accent" />
+                <UsersIcon className="h-5 w-5 text-accent" />
               </div>
             </CardHeader>
             <CardContent>
@@ -326,6 +326,27 @@ export default function AnalysisResult() {
               <Link href={`/games/${id}/shotchart`}>
                 <Button size="lg" variant="outline" className="w-full text-lg h-14">
                   ショットチャートを見る
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8">
+          <Card className="border-2 bg-gradient-to-br from-primary/5 to-accent/5">
+            <CardHeader>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <UsersIcon className="h-6 w-6 text-primary" />
+                ラインナップ効率
+              </CardTitle>
+              <CardDescription className="text-base">
+                各ラインナップの効率性を分析
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href={`/games/${id}/lineup`}>
+                <Button size="lg" variant="outline" className="w-full text-lg h-14">
+                  ラインナップ効率を見る
                 </Button>
               </Link>
             </CardContent>

@@ -13,6 +13,7 @@ import GameDetail from "./pages/GameDetail";
 import Analysis from "./pages/Analysis";
 import AnalysisResult from "./pages/AnalysisResult";
 import ShotChart from "./pages/ShotChart";
+import LineupAnalysis from "./pages/LineupAnalysis";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path={"/games/:id"} component={GameDetail} />
       <Route path="/games/:id/analysis" component={AnalysisResult} />
       <Route path="/games/:id/shotchart" component={ShotChart} />
+      <Route path="/games/:id/lineup" component={LineupAnalysis} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
