@@ -1,7 +1,34 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
-import { ENV } from './_core/env';
+import {
+  InsertUser,
+  users,
+  teams,
+  InsertTeam,
+  Team,
+  players,
+  InsertPlayer,
+  Player,
+  games,
+  InsertGame,
+  Game,
+  events,
+  InsertEvent,
+  Event,
+  stats,
+  InsertStat,
+  Stat,
+  lineups,
+  InsertLineup,
+  Lineup,
+  playlists,
+  InsertPlaylist,
+  Playlist,
+  playlistEvents,
+  InsertPlaylistEvent,
+  PlaylistEvent,
+} from "../drizzle/schema";
+import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -54,9 +81,9 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     }
     if (user.role === undefined) {
       if (user.id === ENV.ownerId) {
-        user.role = 'admin';
-        values.role = 'admin';
-        updateSet.role = 'admin';
+        user.role = "admin";
+        values.role = "admin";
+        updateSet.role = "admin";
       }
     }
 
@@ -80,9 +107,339 @@ export async function getUser(id: string) {
     return undefined;
   }
 
-  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1);
 
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ========== Teams ==========
+
+export async function createTeam(team: InsertTeam): Promise<Team> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(teams).values(team);
+  const result = await db
+    .select()
+    .from(teams)
+    .where(eq(teams.id, team.id!))
+    .limit(1);
+  return result[0];
+}
+
+export async function getTeam(id: string): Promise<Team | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(teams).where(eq(teams.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getTeamsByUser(userId: string): Promise<Team[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(teams).where(eq(teams.createdBy, userId));
+}
+
+export async function getAllTeams(): Promise<Team[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(teams).orderBy(desc(teams.createdAt));
+}
+
+// ========== Players ==========
+
+export async function createPlayer(player: InsertPlayer): Promise<Player> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(players).values(player);
+  const result = await db
+    .select()
+    .from(players)
+    .where(eq(players.id, player.id!))
+    .limit(1);
+  return result[0];
+}
+
+export async function getPlayer(id: string): Promise<Player | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(players)
+    .where(eq(players.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getPlayersByTeam(teamId: string): Promise<Player[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(players).where(eq(players.teamId, teamId));
+}
+
+export async function updatePlayer(
+  id: string,
+  updates: Partial<InsertPlayer>
+): Promise<Player | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  await db.update(players).set(updates).where(eq(players.id, id));
+  return getPlayer(id);
+}
+
+export async function deletePlayer(id: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.delete(players).where(eq(players.id, id));
+}
+
+// ========== Games ==========
+
+export async function createGame(game: InsertGame): Promise<Game> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(games).values(game);
+  const result = await db
+    .select()
+    .from(games)
+    .where(eq(games.id, game.id!))
+    .limit(1);
+  return result[0];
+}
+
+export async function getGame(id: string): Promise<Game | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(games).where(eq(games.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getGamesByUser(userId: string): Promise<Game[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(games)
+    .where(eq(games.createdBy, userId))
+    .orderBy(desc(games.gameDate));
+}
+
+export async function getAllGames(): Promise<Game[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(games).orderBy(desc(games.gameDate));
+}
+
+export async function updateGame(
+  id: string,
+  updates: Partial<InsertGame>
+): Promise<Game | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  await db.update(games).set(updates).where(eq(games.id, id));
+  return getGame(id);
+}
+
+// ========== Events ==========
+
+export async function createEvent(event: InsertEvent): Promise<Event> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(events).values(event);
+  const result = await db
+    .select()
+    .from(events)
+    .where(eq(events.id, event.id!))
+    .limit(1);
+  return result[0];
+}
+
+export async function getEventsByGame(gameId: string): Promise<Event[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(events)
+    .where(eq(events.gameId, gameId))
+    .orderBy(events.timestamp);
+}
+
+export async function updateEvent(
+  id: string,
+  updates: Partial<InsertEvent>
+): Promise<Event | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  await db.update(events).set(updates).where(eq(events.id, id));
+  const result = await db
+    .select()
+    .from(events)
+    .where(eq(events.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function deleteEvent(id: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.delete(events).where(eq(events.id, id));
+}
+
+// ========== Stats ==========
+
+export async function createStat(stat: InsertStat): Promise<Stat> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(stats).values(stat);
+  const result = await db
+    .select()
+    .from(stats)
+    .where(eq(stats.id, stat.id!))
+    .limit(1);
+  return result[0];
+}
+
+export async function getStatsByGame(gameId: string): Promise<Stat[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(stats).where(eq(stats.gameId, gameId));
+}
+
+export async function getStatByGameAndPlayer(
+  gameId: string,
+  playerId: string
+): Promise<Stat | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(stats)
+    .where(and(eq(stats.gameId, gameId), eq(stats.playerId, playerId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateStat(
+  id: string,
+  updates: Partial<InsertStat>
+): Promise<Stat | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  await db.update(stats).set(updates).where(eq(stats.id, id));
+  const result = await db.select().from(stats).where(eq(stats.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// ========== Lineups ==========
+
+export async function createLineup(lineup: InsertLineup): Promise<Lineup> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(lineups).values(lineup);
+  const result = await db
+    .select()
+    .from(lineups)
+    .where(eq(lineups.id, lineup.id!))
+    .limit(1);
+  return result[0];
+}
+
+export async function getLineupsByGame(gameId: string): Promise<Lineup[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(lineups).where(eq(lineups.gameId, gameId));
+}
+
+// ========== Playlists ==========
+
+export async function createPlaylist(
+  playlist: InsertPlaylist
+): Promise<Playlist> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(playlists).values(playlist);
+  const result = await db
+    .select()
+    .from(playlists)
+    .where(eq(playlists.id, playlist.id!))
+    .limit(1);
+  return result[0];
+}
+
+export async function getPlaylist(id: string): Promise<Playlist | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(playlists)
+    .where(eq(playlists.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getPlaylistsByGame(gameId: string): Promise<Playlist[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(playlists).where(eq(playlists.gameId, gameId));
+}
+
+// ========== PlaylistEvents ==========
+
+export async function createPlaylistEvent(
+  playlistEvent: InsertPlaylistEvent
+): Promise<PlaylistEvent> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(playlistEvents).values(playlistEvent);
+  const result = await db
+    .select()
+    .from(playlistEvents)
+    .where(eq(playlistEvents.id, playlistEvent.id!))
+    .limit(1);
+  return result[0];
+}
+
+export async function getPlaylistEventsByPlaylist(
+  playlistId: string
+): Promise<PlaylistEvent[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(playlistEvents)
+    .where(eq(playlistEvents.playlistId, playlistId))
+    .orderBy(playlistEvents.sequenceOrder);
+}
+
