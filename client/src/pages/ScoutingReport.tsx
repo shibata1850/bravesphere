@@ -4,8 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Users, TrendingUp, Shield, Zap, Target, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Users, TrendingUp, Shield, Zap, Target, AlertCircle, CheckCircle2, Download } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { toast } from "sonner";
 
 interface PlayerTendency {
   name: string;
@@ -36,6 +37,20 @@ export default function ScoutingReport() {
     { id: game?.awayTeamId || "" },
     { enabled: !!game?.awayTeamId }
   );
+
+  const exportPDF = trpc.pdf.generateScoutingReport.useMutation({
+    onSuccess: (data) => {
+      toast.success("スカウティングレポートPDFを生成しました");
+      window.open(data.url, "_blank");
+    },
+    onError: () => {
+      toast.error("PDF生成に失敗しました");
+    },
+  });
+
+  const handleExportPDF = () => {
+    exportPDF.mutate({ gameId: id! });
+  };
 
   // サンプルデータ - ホームチーム
   const homePlayerTendencies: PlayerTendency[] = [
@@ -273,10 +288,11 @@ export default function ScoutingReport() {
       </header>
 
       <main className="container py-12">
-        <div className="flex items-center gap-4 mb-8">
-          <Link href={`/games/${id}/analysis`}>
-            <Button variant="ghost" size="icon" className="h-10 w-10">
-              <ArrowLeft className="h-5 w-5" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link href={`/games/${id}/analysis`}>
+              <Button variant="ghost" size="icon" className="h-10 w-10">
+                <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
           <div>
@@ -289,6 +305,15 @@ export default function ScoutingReport() {
               })}
             </p>
           </div>
+          </div>
+          <Button 
+            onClick={handleExportPDF} 
+            className="gap-2"
+            disabled={exportPDF.isPending}
+          >
+            <Download className="h-4 w-4" />
+            {exportPDF.isPending ? "生成中..." : "PDFでエクスポート"}
+          </Button>
         </div>
 
         <Tabs defaultValue="home" className="space-y-6">

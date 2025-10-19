@@ -456,6 +456,12 @@ export const appRouter = router({
         // PDF生成ロジック（後で実装）
         return { success: true, url: "/reports/setplay-report.pdf" };
       }),
+    generateScoutingReport: protectedProcedure
+      .input(z.object({ gameId: z.string() }))
+      .mutation(async ({ input }) => {
+        // PDF生成ロジック（後で実装）
+        return { success: true, url: "/reports/scouting-report.pdf" };
+      }),
   }),
 });
 
