@@ -182,11 +182,23 @@ export default function PlayerComparison() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div>
+          <div className="flex-1">
             <h2 className="text-4xl font-bold mb-2">選手比較分析</h2>
             <p className="text-lg text-muted-foreground">
               2人の選手のパフォーマンスを詳細に比較
             </p>
+          </div>
+          <div className="flex gap-2">
+            <Link href={`/games/${id}/training/${player1Id}`}>
+              <Button variant="outline" size="sm">
+                {player1.playerName}のトレーニング
+              </Button>
+            </Link>
+            <Link href={`/games/${id}/training/${player2Id}`}>
+              <Button variant="outline" size="sm">
+                {player2.playerName}のトレーニング
+              </Button>
+            </Link>
           </div>
         </div>
 

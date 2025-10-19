@@ -20,6 +20,7 @@ import SetPlayAnalysis from "./pages/SetPlayAnalysis";
 import TacticalPlan from "./pages/TacticalPlan";
 import PlayerAnalysis from "./pages/PlayerAnalysis";
 import PlayerComparison from "./pages/PlayerComparison";
+import TrainingPlan from "./pages/TrainingPlan";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/games/:id/tactics" component={TacticalPlan} />
       <Route path="/games/:id/players/:playerId" component={PlayerAnalysis} />
       <Route path="/games/:id/compare" component={PlayerComparison} />
+      <Route path="/games/:id/training/:playerId" component={TrainingPlan} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>
