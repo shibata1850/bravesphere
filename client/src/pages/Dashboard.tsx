@@ -46,7 +46,7 @@ export default function Dashboard() {
         {/* Welcome Section */}
         <div className="mb-12">
           <h2 className="text-4xl font-bold mb-3">
-            ようこそ、<span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{user?.name || "ユーザー"}さん</span>
+            ようこそ、<span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">{user?.email?.split('@')[0] || "ユーザー"}さん</span>
           </h2>
           <p className="text-lg text-muted-foreground">
             データ駆動型のバスケットボール分析を始めましょう
