@@ -74,7 +74,7 @@ export const appRouter = router({
         z.object({
           teamId: z.string(),
           name: z.string(),
-          number: z.number(),
+          number: z.number().optional(),
           position: z.string().optional(),
           height: z.number().optional(),
         })
@@ -84,9 +84,9 @@ export const appRouter = router({
           id: randomUUID(),
           teamId: input.teamId,
           name: input.name,
-          number: input.number,
+          number: input.number ?? null,
           position: input.position || null,
-          height: input.height || null,
+          height: input.height ?? null,
         });
         return player;
       }),

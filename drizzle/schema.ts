@@ -47,7 +47,7 @@ export const players = mysqlTable("players", {
   id: varchar("id", { length: 64 }).primaryKey(),
   teamId: varchar("teamId", { length: 64 }).notNull(),
   name: varchar("name", { length: 100 }).notNull(),
-  number: int("number").notNull(),
+  number: int("number"),
   position: varchar("position", { length: 20 }),
   height: int("height"), // cm
   createdAt: timestamp("createdAt").defaultNow(),

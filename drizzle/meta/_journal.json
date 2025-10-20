@@ -36,6 +36,13 @@
       "when": 1760853477612,
       "tag": "0004_shiny_squadron_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1760929051870,
+      "tag": "0005_first_star_brand",
+      "breakpoints": true
     }
   ]
 }
