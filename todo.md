@@ -107,5 +107,5 @@
 - [x] Serverless Functions用のAPIエンドポイント作成 (api/trpc.ts)
 - [x] ビルド設定の調整 (package.json)
 - [x] 環境変数の設定ガイド作成 (VERCEL_ENV_SETUP.md)
-- [ ] GitHubへのプッシュとVercelデプロイ確認
+- [x] GitHubへのプッシュとVercelデプロイ確認
 
