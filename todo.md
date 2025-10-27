@@ -50,7 +50,7 @@
 ### Phase 7: テストとチェックポイント保存
 - [x] 手動イベント登録のテスト（UI実装完了）
 - [x] タイムライン表示のテスト（UI実装完了）
-- [ ] チェックポイント保存
+- [x] チェックポイント保存（version: 2d8b5c7b）
 
 ### Phase 8: API統合（将来実装）
 - [ ] Google Cloud Video Intelligence APIの認証情報追加
