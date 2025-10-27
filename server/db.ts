@@ -30,6 +30,18 @@ import {
   pdfSettings,
   InsertPdfSetting,
   PdfSetting,
+  videoAnalysisJobs,
+  InsertVideoAnalysisJob,
+  VideoAnalysisJob,
+  videoTrackingData,
+  InsertVideoTrackingData,
+  VideoTrackingData,
+  analyzedEvents,
+  InsertAnalyzedEvent,
+  AnalyzedEvent,
+  videoKeyFrames,
+  InsertVideoKeyFrame,
+  VideoKeyFrame,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -477,5 +489,251 @@ export async function getPdfSetting(userId: string, settingType: string) {
     .limit(1);
   
   return result.length > 0 ? result[0] : null;
+}
+
+
+
+// ==========================================
+// Video Analysis Functions
+// ==========================================
+
+/**
+ * 解析ジョブを作成
+ */
+export async function createAnalysisJob(
+  data: InsertVideoAnalysisJob
+): Promise<VideoAnalysisJob> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(videoAnalysisJobs).values(data);
+  
+  const result = await db
+    .select()
+    .from(videoAnalysisJobs)
+    .where(eq(videoAnalysisJobs.id, data.id))
+    .limit(1);
+
+  return result[0];
+}
+
+/**
+ * 解析ジョブのステータスを更新
+ */
+export async function updateAnalysisJobStatus(
+  jobId: string,
+  status: "queued" | "downloading" | "analyzing_video" | "analyzing_events" | "completed" | "failed",
+  progress?: number,
+  errorMessage?: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: any = { status };
+  
+  if (progress !== undefined) {
+    updateData.progress = progress;
+  }
+  
+  if (errorMessage !== undefined) {
+    updateData.errorMessage = errorMessage;
+  }
+  
+  if (status === "completed" || status === "failed") {
+    updateData.completedAt = new Date();
+  }
+
+  await db
+    .update(videoAnalysisJobs)
+    .set(updateData)
+    .where(eq(videoAnalysisJobs.id, jobId));
+}
+
+/**
+ * 解析ジョブを取得
+ */
+export async function getAnalysisJob(jobId: string): Promise<VideoAnalysisJob | undefined> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(videoAnalysisJobs)
+    .where(eq(videoAnalysisJobs.id, jobId))
+    .limit(1);
+
+  return result[0];
+}
+
+/**
+ * ゲームの解析ジョブを取得
+ */
+export async function getGameAnalysisJob(gameId: string): Promise<VideoAnalysisJob | undefined> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(videoAnalysisJobs)
+    .where(eq(videoAnalysisJobs.gameId, gameId))
+    .orderBy(desc(videoAnalysisJobs.createdAt))
+    .limit(1);
+
+  return result[0];
+}
+
+/**
+ * 追跡データを保存
+ */
+export async function saveTrackingData(
+  data: InsertVideoTrackingData
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(videoTrackingData).values(data);
+}
+
+/**
+ * ゲームの追跡データを取得
+ */
+export async function getGameTrackingData(
+  gameId: string,
+  dataType?: "object_tracking" | "text_detection" | "shot_detection" | "label_detection"
+): Promise<VideoTrackingData[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  if (dataType) {
+    const result = await db
+      .select()
+      .from(videoTrackingData)
+      .where(and(
+        eq(videoTrackingData.gameId, gameId),
+        eq(videoTrackingData.dataType, dataType)
+      ))
+      .orderBy(videoTrackingData.timestamp);
+    return result;
+  } else {
+    const result = await db
+      .select()
+      .from(videoTrackingData)
+      .where(eq(videoTrackingData.gameId, gameId))
+      .orderBy(videoTrackingData.timestamp);
+    return result;
+  }
+}
+
+/**
+ * 解析イベントを作成
+ */
+export async function createAnalyzedEvent(
+  data: InsertAnalyzedEvent
+): Promise<AnalyzedEvent> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(analyzedEvents).values(data);
+  
+  const result = await db
+    .select()
+    .from(analyzedEvents)
+    .where(eq(analyzedEvents.id, data.id))
+    .limit(1);
+
+  return result[0];
+}
+
+/**
+ * ゲームの解析イベントを取得
+ */
+export async function getGameAnalyzedEvents(gameId: string): Promise<AnalyzedEvent[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(analyzedEvents)
+    .where(eq(analyzedEvents.gameId, gameId))
+    .orderBy(analyzedEvents.timestamp);
+
+  return result;
+}
+
+/**
+ * 解析イベントを更新
+ */
+export async function updateAnalyzedEvent(
+  eventId: string,
+  data: Partial<InsertAnalyzedEvent>
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(analyzedEvents)
+    .set(data)
+    .where(eq(analyzedEvents.id, eventId));
+}
+
+/**
+ * 解析イベントを削除
+ */
+export async function deleteAnalyzedEvent(eventId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .delete(analyzedEvents)
+    .where(eq(analyzedEvents.id, eventId));
+}
+
+/**
+ * 解析イベントを検証済みにマーク
+ */
+export async function verifyAnalyzedEvent(eventId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(analyzedEvents)
+    .set({ verified: true })
+    .where(eq(analyzedEvents.id, eventId));
+}
+
+/**
+ * キーフレームを保存
+ */
+export async function saveKeyFrame(
+  data: InsertVideoKeyFrame
+): Promise<VideoKeyFrame> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(videoKeyFrames).values(data);
+  
+  const result = await db
+    .select()
+    .from(videoKeyFrames)
+    .where(eq(videoKeyFrames.id, data.id))
+    .limit(1);
+
+  return result[0];
+}
+
+/**
+ * ゲームのキーフレームを取得
+ */
+export async function getGameKeyFrames(gameId: string): Promise<VideoKeyFrame[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select()
+    .from(videoKeyFrames)
+    .where(eq(videoKeyFrames.gameId, gameId))
+    .orderBy(videoKeyFrames.timestamp);
+
+  return result;
 }
 

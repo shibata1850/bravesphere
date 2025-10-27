@@ -534,6 +534,166 @@ export const appRouter = router({
         return { success: true, url };
       }),
   }),
+
+  // Video Analysis
+  videoAnalysis: router({
+    // 解析ジョブを作成
+    createJob: protectedProcedure
+      .input(
+        z.object({
+          gameId: z.string(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const jobId = randomUUID();
+        const job = await db.createAnalysisJob({
+          id: jobId,
+          gameId: input.gameId,
+          status: "queued",
+          progress: 0,
+        });
+        
+        // ゲームのanalysisStatusを更新
+        await db.updateGame(input.gameId, {
+          analysisStatus: "processing",
+        });
+
+        return job;
+      }),
+
+    // 解析ジョブのステータスを取得
+    getJobStatus: protectedProcedure
+      .input(
+        z.object({
+          gameId: z.string(),
+        })
+      )
+      .query(async ({ input }) => {
+        const job = await db.getGameAnalysisJob(input.gameId);
+        return job;
+      }),
+
+    // ゲームのイベント一覧を取得
+    getGameEvents: protectedProcedure
+      .input(
+        z.object({
+          gameId: z.string(),
+        })
+      )
+      .query(async ({ input }) => {
+        const events = await db.getGameAnalyzedEvents(input.gameId);
+        return events;
+      }),
+
+    // 手動でイベントを作成
+    createManualEvent: protectedProcedure
+      .input(
+        z.object({
+          gameId: z.string(),
+          timestamp: z.number(),
+          eventType: z.enum([
+            "shot",
+            "rebound",
+            "assist",
+            "turnover",
+            "steal",
+            "block",
+            "foul",
+            "substitution",
+          ]),
+          playerId: z.string().optional(),
+          playerNumber: z.number().optional(),
+          teamId: z.string(),
+          xCoord: z.number().optional(),
+          yCoord: z.number().optional(),
+          success: z.boolean().optional(),
+          shotType: z.enum(["2P", "3P", "FT"]).optional(),
+          assistedBy: z.string().optional(),
+          description: z.string(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const event = await db.createAnalyzedEvent({
+          id: randomUUID(),
+          gameId: input.gameId,
+          jobId: "manual", // 手動イベントの場合は "manual"
+          timestamp: input.timestamp,
+          eventType: input.eventType,
+          playerId: input.playerId || null,
+          playerNumber: input.playerNumber ?? null,
+          teamId: input.teamId,
+          xCoord: input.xCoord ?? null,
+          yCoord: input.yCoord ?? null,
+          success: input.success ?? null,
+          shotType: input.shotType || null,
+          assistedBy: input.assistedBy || null,
+          confidence: 1.0, // 手動イベントは信頼度100%
+          description: input.description,
+          rawData: null,
+          verified: true, // 手動イベントは自動的に検証済み
+        });
+        return event;
+      }),
+
+    // イベントを更新
+    updateEvent: protectedProcedure
+      .input(
+        z.object({
+          id: z.string(),
+          timestamp: z.number().optional(),
+          eventType: z
+            .enum([
+              "shot",
+              "rebound",
+              "assist",
+              "turnover",
+              "steal",
+              "block",
+              "foul",
+              "substitution",
+            ])
+            .optional(),
+          playerId: z.string().optional(),
+          playerNumber: z.number().optional(),
+          teamId: z.string().optional(),
+          xCoord: z.number().optional(),
+          yCoord: z.number().optional(),
+          success: z.boolean().optional(),
+          shotType: z.enum(["2P", "3P", "FT"]).optional(),
+          description: z.string().optional(),
+          verified: z.boolean().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { id, ...updateData } = input;
+        await db.updateAnalyzedEvent(id, updateData);
+        return { success: true };
+      }),
+
+    // イベントを削除
+    deleteEvent: protectedProcedure
+      .input(
+        z.object({
+          id: z.string(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await db.deleteAnalyzedEvent(input.id);
+        return { success: true };
+      }),
+
+    // イベントを検証済みにマーク
+    verifyEvent: protectedProcedure
+      .input(
+        z.object({
+          id: z.string(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await db.verifyAnalyzedEvent(input.id);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

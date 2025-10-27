@@ -257,3 +257,110 @@ export const playlistEvents = mysqlTable("playlistEvents", {
 export type PlaylistEvent = typeof playlistEvents.$inferSelect;
 export type InsertPlaylistEvent = typeof playlistEvents.$inferInsert;
 
+/**
+ * VideoAnalysisJobs table - 動画解析ジョブの状態管理
+ */
+export const videoAnalysisJobs = mysqlTable("videoAnalysisJobs", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  gameId: varchar("gameId", { length: 64 }).notNull(),
+  status: mysqlEnum("status", [
+    "queued",
+    "downloading",
+    "analyzing_video",
+    "analyzing_events",
+    "completed",
+    "failed",
+  ])
+    .default("queued")
+    .notNull(),
+  progress: int("progress").default(0).notNull(), // 0-100
+  videoIntelligenceJobId: varchar("videoIntelligenceJobId", { length: 255 }),
+  errorMessage: text("errorMessage"),
+  startedAt: timestamp("startedAt"),
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type VideoAnalysisJob = typeof videoAnalysisJobs.$inferSelect;
+export type InsertVideoAnalysisJob = typeof videoAnalysisJobs.$inferInsert;
+
+/**
+ * VideoTrackingData table - Video Intelligence APIの生データ保存
+ */
+export const videoTrackingData = mysqlTable("videoTrackingData", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  gameId: varchar("gameId", { length: 64 }).notNull(),
+  jobId: varchar("jobId", { length: 64 }).notNull(),
+  dataType: mysqlEnum("dataType", [
+    "object_tracking",
+    "text_detection",
+    "shot_detection",
+    "label_detection",
+  ]).notNull(),
+  timestamp: float("timestamp").notNull(), // 秒単位（小数点対応）
+  data: text("data").notNull(), // JSON形式で保存
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type VideoTrackingData = typeof videoTrackingData.$inferSelect;
+export type InsertVideoTrackingData = typeof videoTrackingData.$inferInsert;
+
+/**
+ * VideoKeyFrames table - キーフレーム画像の保存
+ */
+export const videoKeyFrames = mysqlTable("videoKeyFrames", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  gameId: varchar("gameId", { length: 64 }).notNull(),
+  jobId: varchar("jobId", { length: 64 }).notNull(),
+  timestamp: float("timestamp").notNull(), // 秒単位
+  frameType: mysqlEnum("frameType", [
+    "shot_attempt",
+    "score_change",
+    "ball_possession_change",
+    "period_start",
+    "period_end",
+  ]).notNull(),
+  imagePath: text("imagePath").notNull(), // S3パス
+  imageUrl: text("imageUrl").notNull(), // 公開URL
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type VideoKeyFrame = typeof videoKeyFrames.$inferSelect;
+export type InsertVideoKeyFrame = typeof videoKeyFrames.$inferInsert;
+
+/**
+ * AnalyzedEvents table - Gemini APIが検出したイベント
+ */
+export const analyzedEvents = mysqlTable("analyzedEvents", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  gameId: varchar("gameId", { length: 64 }).notNull(),
+  jobId: varchar("jobId", { length: 64 }).notNull(),
+  timestamp: float("timestamp").notNull(), // 秒単位
+  eventType: mysqlEnum("eventType", [
+    "shot",
+    "rebound",
+    "assist",
+    "turnover",
+    "steal",
+    "block",
+    "foul",
+    "substitution",
+  ]).notNull(),
+  playerId: varchar("playerId", { length: 64 }),
+  playerNumber: int("playerNumber"), // 背番号（選手未特定時）
+  teamId: varchar("teamId", { length: 64 }).notNull(),
+  xCoord: float("xCoord"),
+  yCoord: float("yCoord"),
+  success: boolean("success"),
+  shotType: mysqlEnum("shotType", ["2P", "3P", "FT"]),
+  assistedBy: varchar("assistedBy", { length: 64 }),
+  confidence: float("confidence").notNull(), // 0.0-1.0
+  description: text("description"), // Geminiが生成した説明
+  rawData: text("rawData"), // Geminiの生データ（JSON）
+  verified: boolean("verified").default(false).notNull(), // 手動検証済みフラグ
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type AnalyzedEvent = typeof analyzedEvents.$inferSelect;
+export type InsertAnalyzedEvent = typeof analyzedEvents.$inferInsert;
+

@@ -4,6 +4,7 @@ import { APP_LOGO, APP_TITLE } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, BarChart3, Video, Calendar, MapPin } from "lucide-react";
 import { Link, useParams } from "wouter";
+import { VideoAnalysisPanel } from "@/components/VideoAnalysisPanel";
 
 export default function GameDetail() {
   const { id } = useParams<{ id: string }>();
@@ -200,6 +201,13 @@ export default function GameDetail() {
               </CardContent>
             </Card>
           )}
+
+          {/* Video Analysis Panel */}
+          <VideoAnalysisPanel 
+            gameId={game.id} 
+            homeTeamId={game.homeTeamId} 
+            awayTeamId={game.awayTeamId} 
+          />
 
           {/* Actions */}
           <Card className="border-2 bg-gradient-to-br from-primary/5 to-accent/5">

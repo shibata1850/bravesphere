@@ -10,4 +10,7 @@ export const ENV = {
   supabaseUrl: process.env.VITE_SUPABASE_URL ?? "",
   supabaseAnonKey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
   supabaseServiceKey: process.env.SUPABASE_SERVICE_KEY ?? "",
+  googleCloudCredentials: process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON ?? "",
+  googleCloudProjectId: process.env.GOOGLE_CLOUD_PROJECT_ID ?? "",
+  googleCloudStorageBucket: process.env.GOOGLE_CLOUD_STORAGE_BUCKET ?? "",
 };
