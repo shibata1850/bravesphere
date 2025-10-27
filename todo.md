@@ -98,3 +98,14 @@
 - [ ] チーム間の比較分析
 - [ ] シーズン通算統計
 
+
+
+## 🚀 Vercelへの移行作業
+
+### 移行タスク
+- [x] vercel.json設定ファイルの作成
+- [x] Serverless Functions用のAPIエンドポイント作成 (api/trpc.ts)
+- [x] ビルド設定の調整 (package.json)
+- [x] 環境変数の設定ガイド作成 (VERCEL_ENV_SETUP.md)
+- [ ] GitHubへのプッシュとVercelデプロイ確認
+
