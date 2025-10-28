@@ -9,19 +9,6 @@
       "source": "/api/trpc/:path*",
       "destination": "/api/trpc"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/trpc/(.*)",
-      "dest": "/api/trpc"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
   ]
 }
 
