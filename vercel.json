@@ -1,17 +1,10 @@
 {
-  "buildCommand": "pnpm build",
-  "devCommand": "pnpm dev",
+  "buildCommand": "pnpm build && pnpm build:server",
   "installCommand": "pnpm install",
-  "framework": null,
-  "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/api/trpc/:path*",
-      "destination": "/api/trpc"
-    },
-    {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/dist/index.js"
     }
   ]
 }
