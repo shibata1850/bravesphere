@@ -1,11 +1,21 @@
 {
-  "buildCommand": "pnpm build && pnpm build:server",
+  "buildCommand": "pnpm build",
   "installCommand": "pnpm install",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "/api"
+    },
+    {
       "source": "/(.*)",
-      "destination": "/dist/index.js"
+      "destination": "/$1"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  }
 }
 
