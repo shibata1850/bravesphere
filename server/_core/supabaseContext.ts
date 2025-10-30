@@ -25,8 +25,8 @@ export async function createSupabaseContext(
       };
     }
 
-    // Get authorization header
-    const authHeader = opts.req.headers.authorization;
+    // Get authorization header (handle both Express and Vercel types)
+    const authHeader = opts.req.headers?.authorization || opts.req.headers?.['authorization'];
     
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
