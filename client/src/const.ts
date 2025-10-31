@@ -4,18 +4,9 @@ export const APP_TITLE = "BRAVE SPHERE";
 
 export const APP_LOGO = "/brave-sphere-logo.png";
 
-// Generate login URL at runtime so redirect URI reflects the current origin.
+// Generate login URL for Supabase authentication
 export const getLoginUrl = () => {
-  const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
-  const appId = import.meta.env.VITE_APP_ID;
-  const redirectUri = `${window.location.origin}/api/oauth/callback`;
-  const state = btoa(redirectUri);
-
-  const url = new URL(`${oauthPortalUrl}/app-auth`);
-  url.searchParams.set("appId", appId);
-  url.searchParams.set("redirectUri", redirectUri);
-  url.searchParams.set("state", state);
-  url.searchParams.set("type", "signIn");
-
-  return url.toString();
+  // For Supabase auth, redirect to the login page
+  return '/login';
 };
+
