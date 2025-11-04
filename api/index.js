@@ -1599,6 +1599,15 @@ if (supabaseUrl && supabaseAnonKey) {
 // server/_core/supabaseContext.ts
 async function createSupabaseContext(opts) {
   let user = null;
+  const buildUserFromSupabase = (supabaseUser) => ({
+    id: supabaseUser.id,
+    email: supabaseUser.email ?? null,
+    name: supabaseUser.user_metadata?.name ?? null,
+    loginMethod: supabaseUser.app_metadata?.provider ?? "email",
+    role: "user",
+    createdAt: /* @__PURE__ */ new Date(),
+    lastSignedIn: /* @__PURE__ */ new Date()
+  });
   try {
     if (!supabaseAdmin) {
       console.warn("[Auth] Supabase not configured");
@@ -1616,21 +1625,38 @@ async function createSupabaseContext(opts) {
         console.warn("[Auth] Invalid token:", error?.message);
         user = null;
       } else {
-        user = await getUser(supabaseUser.id) ?? null;
-        if (!user) {
-          await upsertUser({
-            id: supabaseUser.id,
-            email: supabaseUser.email ?? null,
-            name: supabaseUser.user_metadata?.name ?? null,
-            loginMethod: "email",
-            lastSignedIn: /* @__PURE__ */ new Date()
-          });
+        try {
           user = await getUser(supabaseUser.id) ?? null;
+        } catch (dbError) {
+          console.warn("[Auth] Failed to read user from database:", dbError);
+          user = null;
+        }
+        if (!user) {
+          try {
+            await upsertUser({
+              id: supabaseUser.id,
+              email: supabaseUser.email ?? null,
+              name: supabaseUser.user_metadata?.name ?? null,
+              loginMethod: supabaseUser.app_metadata?.provider ?? "email",
+              lastSignedIn: /* @__PURE__ */ new Date()
+            });
+            user = await getUser(supabaseUser.id) ?? null;
+          } catch (dbError) {
+            console.warn("[Auth] Failed to upsert user in database:", dbError);
+            user = null;
+          }
         } else {
-          await upsertUser({
-            id: user.id,
-            lastSignedIn: /* @__PURE__ */ new Date()
-          });
+          try {
+            await upsertUser({
+              id: user.id,
+              lastSignedIn: /* @__PURE__ */ new Date()
+            });
+          } catch (dbError) {
+            console.warn("[Auth] Failed to update user sign-in timestamp:", dbError);
+          }
+        }
+        if (!user) {
+          user = buildUserFromSupabase(supabaseUser);
         }
       }
     }

@@ -1,4 +1,5 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
+import type { User as SupabaseAuthUser } from "@supabase/supabase-js";
 import type { User } from "../../drizzle/schema";
 import { supabaseAdmin } from "../supabase";
 import * as db from "../db";
@@ -13,6 +14,17 @@ export async function createSupabaseContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
   let user: User | null = null;
+
+  const buildUserFromSupabase = (supabaseUser: SupabaseAuthUser): User => ({
+    id: supabaseUser.id,
+    email: supabaseUser.email ?? null,
+    name: (supabaseUser.user_metadata?.name as string | undefined) ?? null,
+    loginMethod:
+      (supabaseUser.app_metadata?.provider as string | undefined) ?? "email",
+    role: "user",
+    createdAt: new Date(),
+    lastSignedIn: new Date(),
+  });
 
   try {
     // Check if Supabase is configured
@@ -39,24 +51,42 @@ export async function createSupabaseContext(
         user = null;
       } else {
         // Get or create user in our database
-          user = await db.getUser(supabaseUser.id) ?? null;
-        
+        try {
+          user = (await db.getUser(supabaseUser.id)) ?? null;
+        } catch (dbError) {
+          console.warn('[Auth] Failed to read user from database:', dbError);
+          user = null;
+        }
+
         if (!user) {
-          // Create user if doesn't exist
-          await db.upsertUser({
-            id: supabaseUser.id,
-            email: supabaseUser.email ?? null,
-            name: supabaseUser.user_metadata?.name ?? null,
-            loginMethod: 'email',
-            lastSignedIn: new Date(),
-          });
-          user = await db.getUser(supabaseUser.id) ?? null;
+          try {
+            await db.upsertUser({
+              id: supabaseUser.id,
+              email: supabaseUser.email ?? null,
+              name: supabaseUser.user_metadata?.name ?? null,
+              loginMethod:
+                (supabaseUser.app_metadata?.provider as string | undefined) ??
+                'email',
+              lastSignedIn: new Date(),
+            });
+            user = (await db.getUser(supabaseUser.id)) ?? null;
+          } catch (dbError) {
+            console.warn('[Auth] Failed to upsert user in database:', dbError);
+            user = null;
+          }
         } else {
-          // Update last signed in
-          await db.upsertUser({
-            id: user.id,
-            lastSignedIn: new Date(),
-          });
+          try {
+            await db.upsertUser({
+              id: user.id,
+              lastSignedIn: new Date(),
+            });
+          } catch (dbError) {
+            console.warn('[Auth] Failed to update user sign-in timestamp:', dbError);
+          }
+        }
+
+        if (!user) {
+          user = buildUserFromSupabase(supabaseUser);
         }
       }
     }
