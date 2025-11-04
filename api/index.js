@@ -205,8 +205,8 @@ var init_pdfGenerator = __esm({
   }
 });
 
-// api/index.ts
-import { createHTTPHandler } from "@trpc/server/adapters/standalone";
+// api/_index.ts
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 // shared/const.ts
 var COOKIE_NAME = "app_session_id";
@@ -1615,11 +1615,7 @@ async function createContext(opts) {
   return createSupabaseContext(opts);
 }
 
-// api/index.ts
-var trpcHandler = createHTTPHandler({
-  router: appRouter,
-  createContext: ({ req, res }) => createContext({ req, res })
-});
+// api/_index.ts
 async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -1628,26 +1624,24 @@ async function handler(req, res) {
     res.status(200).end();
     return;
   }
-  const url = new URL(req.url || "", `http://${req.headers.host}`);
-  return trpcHandler({
-    req: {
-      method: req.method || "GET",
-      headers: req.headers,
-      query: Object.fromEntries(url.searchParams),
-      body: req.body
-    },
-    res: {
-      statusCode: 200,
-      setHeader: (key, value) => res.setHeader(key, value),
-      end: (body) => {
-        if (body) {
-          res.send(body);
-        } else {
-          res.end();
-        }
-      }
-    }
+  const url = new URL(req.url || "", `https://${req.headers.host}`);
+  const fetchRequest = new Request(url.toString(), {
+    method: req.method || "GET",
+    headers: new Headers(req.headers),
+    body: req.method !== "GET" && req.method !== "HEAD" ? JSON.stringify(req.body) : void 0
   });
+  const fetchResponse = await fetchRequestHandler({
+    req: fetchRequest,
+    router: appRouter,
+    endpoint: "/api/trpc",
+    createContext: () => createContext({ req, res })
+  });
+  res.status(fetchResponse.status);
+  fetchResponse.headers.forEach((value, key) => {
+    res.setHeader(key, value);
+  });
+  const body = await fetchResponse.text();
+  res.send(body);
 }
 export {
   handler as default
