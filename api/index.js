@@ -382,6 +382,7 @@ var systemRouter = router({
 // server/db.ts
 import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
 
 // drizzle/schema.ts
 import {
@@ -679,17 +680,55 @@ var analyzedEvents = mysqlTable("analyzedEvents", {
 
 // server/db.ts
 init_env();
-var _db = null;
-async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
-    try {
-      _db = drizzle(process.env.DATABASE_URL);
-    } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
-      _db = null;
-    }
+var globalForDb = globalThis;
+async function getPool() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    console.warn("[Database] DATABASE_URL is not configured");
+    return null;
   }
-  return _db;
+  if (globalForDb.__dbPool) {
+    return globalForDb.__dbPool;
+  }
+  try {
+    const connectionLimit = Number.parseInt(
+      process.env.DB_CONNECTION_LIMIT ?? "1",
+      10
+    );
+    const connectTimeout = Number.parseInt(
+      process.env.DB_CONNECT_TIMEOUT ?? "10000",
+      10
+    );
+    const useSsl = (process.env.DATABASE_SSL ?? "true").toLowerCase() !== "false";
+    const rejectUnauthorized = (process.env.DATABASE_SSL_REJECT_UNAUTHORIZED ?? "true").toLowerCase() !== "false";
+    globalForDb.__dbPool = mysql.createPool({
+      uri: databaseUrl,
+      waitForConnections: true,
+      connectionLimit: Number.isFinite(connectionLimit) ? Math.max(connectionLimit, 1) : 1,
+      connectTimeout: Number.isFinite(connectTimeout) ? Math.max(connectTimeout, 1e3) : 1e4,
+      ssl: useSsl ? { rejectUnauthorized } : void 0
+    });
+  } catch (error) {
+    console.error("[Database] Failed to create connection pool:", error);
+    globalForDb.__dbPool = null;
+  }
+  return globalForDb.__dbPool ?? null;
+}
+async function getDb() {
+  if (globalForDb.__drizzleDb) {
+    return globalForDb.__drizzleDb;
+  }
+  const pool = await getPool();
+  if (!pool) {
+    return null;
+  }
+  try {
+    globalForDb.__drizzleDb = drizzle(pool);
+  } catch (error) {
+    console.error("[Database] Failed to initialize drizzle client:", error);
+    globalForDb.__drizzleDb = null;
+  }
+  return globalForDb.__drizzleDb ?? null;
 }
 async function upsertUser(user) {
   if (!user.id) {
