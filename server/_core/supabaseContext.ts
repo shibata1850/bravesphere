@@ -39,8 +39,8 @@ export async function createSupabaseContext(
         user = null;
       } else {
         // Get or create user in our database
-          user = await db.getUser(supabaseUser.id) ?? null;
-        
+        user = (await db.getUser(supabaseUser.id)) ?? null;
+
         if (!user) {
           // Create user if doesn't exist
           await db.upsertUser({
