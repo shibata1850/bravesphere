@@ -13,9 +13,8 @@
     }
   ],
   "functions": {
-    "api/index.ts": {
-      "maxDuration": 10,
-      "includeFiles": "server/**"
+    "api/index.js": {
+      "maxDuration": 10
     }
   }
 }
