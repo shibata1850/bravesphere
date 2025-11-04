@@ -382,6 +382,7 @@ var systemRouter = router({
 // server/db.ts
 import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import { createPool } from "mysql2/promise";
 
 // drizzle/schema.ts
 import {
@@ -679,15 +680,49 @@ var analyzedEvents = mysqlTable("analyzedEvents", {
 
 // server/db.ts
 init_env();
+var _pool = null;
 var _db = null;
-async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
-    try {
-      _db = drizzle(process.env.DATABASE_URL);
-    } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
-      _db = null;
+function maskConnectionString(connectionString) {
+  try {
+    const url = new URL(connectionString);
+    if (url.password) {
+      return connectionString.replace(url.password, "***");
     }
+  } catch (error) {
+    console.warn("[Database] Failed to mask connection string:", error);
+  }
+  return connectionString;
+}
+async function getDb() {
+  if (_db) {
+    return _db;
+  }
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.warn("[Database] DATABASE_URL is not set");
+    return null;
+  }
+  if (!connectionString.startsWith("mysql")) {
+    console.warn(
+      `[Database] Unsupported DATABASE_URL scheme. Expected mysql-compatible connection string but received ${maskConnectionString(connectionString)}`
+    );
+    return null;
+  }
+  try {
+    if (!_pool) {
+      _pool = createPool({
+        uri: connectionString,
+        waitForConnections: true,
+        connectionLimit: ENV.isProduction ? 1 : 5,
+        connectTimeout: 1e4,
+        ssl: { rejectUnauthorized: true }
+      });
+    }
+    _db = drizzle(_pool);
+  } catch (error) {
+    console.warn("[Database] Failed to create pool:", error);
+    _pool = null;
+    _db = null;
   }
   return _db;
 }
@@ -1564,6 +1599,15 @@ if (supabaseUrl && supabaseAnonKey) {
 // server/_core/supabaseContext.ts
 async function createSupabaseContext(opts) {
   let user = null;
+  const buildUserFromSupabase = (supabaseUser) => ({
+    id: supabaseUser.id,
+    email: supabaseUser.email ?? null,
+    name: supabaseUser.user_metadata?.name ?? null,
+    loginMethod: supabaseUser.app_metadata?.provider ?? "email",
+    role: "user",
+    createdAt: /* @__PURE__ */ new Date(),
+    lastSignedIn: /* @__PURE__ */ new Date()
+  });
   try {
     if (!supabaseAdmin) {
       console.warn("[Auth] Supabase not configured");
@@ -1581,21 +1625,38 @@ async function createSupabaseContext(opts) {
         console.warn("[Auth] Invalid token:", error?.message);
         user = null;
       } else {
-        user = await getUser(supabaseUser.id) ?? null;
-        if (!user) {
-          await upsertUser({
-            id: supabaseUser.id,
-            email: supabaseUser.email ?? null,
-            name: supabaseUser.user_metadata?.name ?? null,
-            loginMethod: "email",
-            lastSignedIn: /* @__PURE__ */ new Date()
-          });
+        try {
           user = await getUser(supabaseUser.id) ?? null;
+        } catch (dbError) {
+          console.warn("[Auth] Failed to read user from database:", dbError);
+          user = null;
+        }
+        if (!user) {
+          try {
+            await upsertUser({
+              id: supabaseUser.id,
+              email: supabaseUser.email ?? null,
+              name: supabaseUser.user_metadata?.name ?? null,
+              loginMethod: supabaseUser.app_metadata?.provider ?? "email",
+              lastSignedIn: /* @__PURE__ */ new Date()
+            });
+            user = await getUser(supabaseUser.id) ?? null;
+          } catch (dbError) {
+            console.warn("[Auth] Failed to upsert user in database:", dbError);
+            user = null;
+          }
         } else {
-          await upsertUser({
-            id: user.id,
-            lastSignedIn: /* @__PURE__ */ new Date()
-          });
+          try {
+            await upsertUser({
+              id: user.id,
+              lastSignedIn: /* @__PURE__ */ new Date()
+            });
+          } catch (dbError) {
+            console.warn("[Auth] Failed to update user sign-in timestamp:", dbError);
+          }
+        }
+        if (!user) {
+          user = buildUserFromSupabase(supabaseUser);
         }
       }
     }
