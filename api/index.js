@@ -382,6 +382,7 @@ var systemRouter = router({
 // server/db.ts
 import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import { createPool } from "mysql2/promise";
 
 // drizzle/schema.ts
 import {
@@ -679,15 +680,49 @@ var analyzedEvents = mysqlTable("analyzedEvents", {
 
 // server/db.ts
 init_env();
+var _pool = null;
 var _db = null;
-async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
-    try {
-      _db = drizzle(process.env.DATABASE_URL);
-    } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
-      _db = null;
+function maskConnectionString(connectionString) {
+  try {
+    const url = new URL(connectionString);
+    if (url.password) {
+      return connectionString.replace(url.password, "***");
     }
+  } catch (error) {
+    console.warn("[Database] Failed to mask connection string:", error);
+  }
+  return connectionString;
+}
+async function getDb() {
+  if (_db) {
+    return _db;
+  }
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.warn("[Database] DATABASE_URL is not set");
+    return null;
+  }
+  if (!connectionString.startsWith("mysql")) {
+    console.warn(
+      `[Database] Unsupported DATABASE_URL scheme. Expected mysql-compatible connection string but received ${maskConnectionString(connectionString)}`
+    );
+    return null;
+  }
+  try {
+    if (!_pool) {
+      _pool = createPool({
+        uri: connectionString,
+        waitForConnections: true,
+        connectionLimit: ENV.isProduction ? 1 : 5,
+        connectTimeout: 1e4,
+        ssl: { rejectUnauthorized: true }
+      });
+    }
+    _db = drizzle(_pool);
+  } catch (error) {
+    console.warn("[Database] Failed to create pool:", error);
+    _pool = null;
+    _db = null;
   }
   return _db;
 }
