@@ -8,7 +8,9 @@ Vercelのプロジェクト設定 → Environment Variables で以下の環境�
 ```
 DATABASE_URL=postgresql://user:password@host:port/database
 ```
-Supabaseのデータベース接続文字列（Supabase Dashboard → Project Settings → Database → Connection string）
+Supabaseのデータベース接続文字列（Supabase Dashboard → Project Settings → Database → Connection string → Transaction mode）
+
+**重要**: Supabaseの「Transaction」モード（`postgresql://`で始まる接続文字列）を使用してください。Session Poolingは使用できません。
 
 ### Supabase認証
 ```

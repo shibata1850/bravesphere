@@ -1,6 +1,6 @@
 import { eq, and, desc } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { createPool, type Pool } from "mysql2/promise";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   InsertUser,
   users,
@@ -46,7 +46,7 @@ import {
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
-let _pool: Pool | null = null;
+let _client: ReturnType<typeof postgres> | null = null;
 let _db: ReturnType<typeof drizzle> | null = null;
 
 function maskConnectionString(connectionString: string) {
@@ -73,28 +73,26 @@ export async function getDb() {
     return null;
   }
 
-  if (!connectionString.startsWith("mysql")) {
+  if (!connectionString.startsWith("postgres")) {
     console.warn(
-      `[Database] Unsupported DATABASE_URL scheme. Expected mysql-compatible connection string but received ${maskConnectionString(connectionString)}`,
+      `[Database] Unsupported DATABASE_URL scheme. Expected PostgreSQL-compatible connection string but received ${maskConnectionString(connectionString)}`,
     );
     return null;
   }
 
   try {
-    if (!_pool) {
-      _pool = createPool({
-        uri: connectionString,
-        waitForConnections: true,
-        connectionLimit: ENV.isProduction ? 1 : 5,
-        connectTimeout: 10_000,
-        ssl: { rejectUnauthorized: true },
+    if (!_client) {
+      _client = postgres(connectionString, {
+        max: ENV.isProduction ? 1 : 5,
+        idle_timeout: 20,
+        connect_timeout: 10,
       });
     }
 
-    _db = drizzle(_pool);
+    _db = drizzle(_client);
   } catch (error) {
-    console.warn("[Database] Failed to create pool:", error);
-    _pool = null;
+    console.warn("[Database] Failed to create client:", error);
+    _client = null;
     _db = null;
   }
 
