@@ -1,1 +1,0 @@
-ALTER TABLE `players` MODIFY COLUMN `number` int;
