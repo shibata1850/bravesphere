@@ -1,54 +1,12 @@
 {
   "version": "7",
-  "dialect": "mysql",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1760846307032,
-      "tag": "0000_ambiguous_psynapse",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1760846353624,
-      "tag": "0001_boring_vector",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1760850837253,
-      "tag": "0002_careful_leo",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1760853039821,
-      "tag": "0003_omniscient_ozymandias",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1760853477612,
-      "tag": "0004_shiny_squadron_sinister",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1760929051870,
-      "tag": "0005_first_star_brand",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "5",
-      "when": 1761548494083,
-      "tag": "0006_tidy_red_ghost",
+      "version": "7",
+      "when": 1763621990260,
+      "tag": "0000_noisy_wither",
       "breakpoints": true
     }
   ]
