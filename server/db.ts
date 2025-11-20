@@ -144,7 +144,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.id,
       set: updateSet,
     });
   } catch (error) {
@@ -502,7 +503,8 @@ export async function savePdfSetting(setting: InsertPdfSetting) {
   const db = await getDb();
   if (!db) return null;
   
-  const result = await db.insert(pdfSettings).values(setting).onDuplicateKeyUpdate({
+  const result = await db.insert(pdfSettings).values(setting).onConflictDoUpdate({
+    target: pdfSettings.id,
     set: {
       sections: setting.sections,
       updatedAt: new Date(),
