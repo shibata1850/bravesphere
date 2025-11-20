@@ -84,7 +84,7 @@ export async function getDb() {
     if (!_client) {
       _client = postgres(connectionString, {
         max: ENV.isProduction ? 1 : 5,
-        ssl: { rejectUnauthorized: true },
+        ssl: 'require',
       });
     }
 
