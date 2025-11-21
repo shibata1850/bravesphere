@@ -358,6 +358,15 @@ var adminProcedure = t.procedure.use(
 );
 
 // server/_core/systemRouter.ts
+function maskConnectionString(str) {
+  if (!str) return "not set";
+  const match = str.match(/postgresql:\/\/([^:]+):([^@]+)@([^\/]+)(\/.*)?/);
+  if (match) {
+    const [, username, , hostPort, database] = match;
+    return `postgresql://${username}:***@${hostPort}${database || ""}`;
+  }
+  return "***";
+}
 var systemRouter = router({
   health: publicProcedure.input(
     z.object({
@@ -366,6 +375,20 @@ var systemRouter = router({
   ).query(() => ({
     ok: true
   })),
+  // Diagnostic endpoint to check environment configuration
+  diagnostics: publicProcedure.query(() => {
+    const databaseUrl = process.env.DATABASE_URL;
+    const host = databaseUrl?.split("@")[1]?.split("/")[0] || "not found";
+    return {
+      environment: process.env.NODE_ENV || "not set",
+      databaseUrl: maskConnectionString(databaseUrl || ""),
+      databaseHost: host,
+      hasSupabaseUrl: !!process.env.VITE_SUPABASE_URL,
+      hasSupabaseAnonKey: !!process.env.VITE_SUPABASE_ANON_KEY,
+      hasSupabaseServiceKey: !!process.env.SUPABASE_SERVICE_KEY,
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+    };
+  }),
   notifyOwner: adminProcedure.input(
     z.object({
       title: z.string().min(1, "title is required"),
@@ -669,7 +692,7 @@ var videoKeyFrames = pgTable("videoKeyFrames", {
 init_env();
 var _client = null;
 var _db = null;
-function maskConnectionString(connectionString) {
+function maskConnectionString2(connectionString) {
   try {
     const url = new URL(connectionString);
     if (url.password) {
@@ -692,7 +715,7 @@ async function getDb() {
   console.log("[Database] Connection string host:", connectionString.split("@")[1]?.split("/")[0] || "unable to parse");
   if (!connectionString.startsWith("postgres")) {
     console.warn(
-      `[Database] Unsupported DATABASE_URL scheme. Expected postgresql-compatible connection string but received ${maskConnectionString(connectionString)}`
+      `[Database] Unsupported DATABASE_URL scheme. Expected postgresql-compatible connection string but received ${maskConnectionString2(connectionString)}`
     );
     return null;
   }

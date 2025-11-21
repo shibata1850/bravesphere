@@ -94,12 +94,21 @@ ORDER BY table_name;
 
 ### 接続エラー
 
-Vercelの環境変数`DATABASE_URL`が正しく設定されているか確認してください：
+⚠️ **重要**: Vercelのようなサーバーレス環境では、**Transaction pooler** の接続文字列を使用する必要があります。
+
+詳細なトラブルシューティングについては、[DATABASE_URL_TROUBLESHOOTING.md](./DATABASE_URL_TROUBLESHOOTING.md) を参照してください。
+
+正しい形式（Transaction pooler）：
+```
+DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[YOUR-PASSWORD]@aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres
+```
+
+**間違った形式（Direct connection）：**
 ```
 DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres
 ```
 
-**注意**: SupabaseのDATABASE_URLには `?sslmode=require` などのSSLパラメータが必要な場合があります。
+Supabase Dashboard → Settings → Database → Connection string → **Connection pooling** タブ → **Transaction mode** から正しい接続文字列を取得してください。
 
 ## 完了後
 
