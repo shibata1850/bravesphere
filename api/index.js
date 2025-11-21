@@ -689,6 +689,7 @@ async function getDb() {
     console.warn("[Database] DATABASE_URL is not set");
     return null;
   }
+  console.log("[Database] Connection string host:", connectionString.split("@")[1]?.split("/")[0] || "unable to parse");
   if (!connectionString.startsWith("postgres")) {
     console.warn(
       `[Database] Unsupported DATABASE_URL scheme. Expected postgresql-compatible connection string but received ${maskConnectionString(connectionString)}`
