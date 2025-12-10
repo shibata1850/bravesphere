@@ -34,8 +34,18 @@ export default function TeamPractice() {
   const { teamId } = useParams();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // フォーム状態管理
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    date: "",
+    duration: "",
+    location: "",
+    focus: "",
+  });
+
   // サンプルデータ
-  const practices: Practice[] = [
+  const initialPractices: Practice[] = [
     {
       id: "1",
       title: "オフェンス強化練習",
@@ -81,6 +91,55 @@ export default function TeamPractice() {
       notes: "ゾーンディフェンスのローテーションが改善された。次回はプレスディフェンスも追加。",
     },
   ];
+
+  // 練習リストの状態管理
+  const [practices, setPractices] = useState<Practice[]>(initialPractices);
+
+  // フォーカスのラベルマッピング
+  const focusLabels: Record<string, string> = {
+    offense: "オフェンス",
+    defense: "ディフェンス",
+    physical: "フィジカル",
+    tactical: "戦術",
+    mixed: "総合",
+  };
+
+  // フォームリセット
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      description: "",
+      date: "",
+      duration: "",
+      location: "",
+      focus: "",
+    });
+  };
+
+  // 練習追加ハンドラー
+  const handleAddPractice = () => {
+    if (!formData.title || !formData.date || !formData.duration) {
+      alert("タイトル、日時、時間は必須です");
+      return;
+    }
+
+    const newPractice: Practice = {
+      id: Date.now().toString(),
+      title: formData.title,
+      description: formData.description,
+      date: formData.date.split("T")[0], // datetime-localからdateを抽出
+      duration: parseInt(formData.duration, 10),
+      location: formData.location || "未定",
+      focus: focusLabels[formData.focus] || "総合",
+      drills: [],
+      attendance: [],
+      notes: "",
+    };
+
+    setPractices([...practices, newPractice]);
+    resetForm();
+    setIsDialogOpen(false);
+  };
 
   const upcomingPractices = practices.filter(p => new Date(p.date) >= new Date());
   const pastPractices = practices.filter(p => new Date(p.date) < new Date());
@@ -132,30 +191,56 @@ export default function TeamPractice() {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">タイトル</Label>
-                  <Input id="title" placeholder="例: オフェンス強化練習" />
+                  <Input
+                    id="title"
+                    placeholder="例: オフェンス強化練習"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">説明</Label>
-                  <Textarea id="description" placeholder="練習の目的や内容" />
+                  <Textarea
+                    id="description"
+                    placeholder="練習の目的や内容"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="date">日時</Label>
-                    <Input id="date" type="datetime-local" />
+                    <Input
+                      id="date"
+                      type="datetime-local"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="duration">時間（分）</Label>
-                    <Input id="duration" type="number" placeholder="120" />
+                    <Input
+                      id="duration"
+                      type="number"
+                      placeholder="120"
+                      value={formData.duration}
+                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="location">場所</Label>
-                    <Input id="location" placeholder="メインアリーナ" />
+                    <Input
+                      id="location"
+                      placeholder="メインアリーナ"
+                      value={formData.location}
+                      onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="focus">フォーカス</Label>
-                    <Select>
+                    <Select value={formData.focus} onValueChange={(value) => setFormData({ ...formData, focus: value })}>
                       <SelectTrigger>
                         <SelectValue placeholder="選択してください" />
                       </SelectTrigger>
@@ -171,10 +256,10 @@ export default function TeamPractice() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button variant="outline" onClick={() => { resetForm(); setIsDialogOpen(false); }}>
                   キャンセル
                 </Button>
-                <Button onClick={() => setIsDialogOpen(false)}>
+                <Button onClick={handleAddPractice}>
                   追加
                 </Button>
               </DialogFooter>
