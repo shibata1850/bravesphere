@@ -186,15 +186,25 @@ export async function getUser(id: string) {
 
 export async function createTeam(team: InsertTeam): Promise<Team> {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    console.error("[Database] createTeam: Database not available");
+    throw new Error("Database not available");
+  }
 
-  await db.insert(teams).values(team);
-  const result = await db
-    .select()
-    .from(teams)
-    .where(eq(teams.id, team.id!))
-    .limit(1);
-  return result[0];
+  try {
+    console.log("[Database] createTeam: Inserting team", team.id);
+    await db.insert(teams).values(team);
+    const result = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, team.id!))
+      .limit(1);
+    console.log("[Database] createTeam: Success");
+    return result[0];
+  } catch (error) {
+    console.error("[Database] createTeam failed:", error);
+    throw error;
+  }
 }
 
 export async function getTeam(id: string): Promise<Team | undefined> {
@@ -214,9 +224,19 @@ export async function getTeamsByUser(userId: string): Promise<Team[]> {
 
 export async function getAllTeams(): Promise<Team[]> {
   const db = await getDb();
-  if (!db) return [];
+  if (!db) {
+    console.error("[Database] getAllTeams: Database not available");
+    return [];
+  }
 
-  return db.select().from(teams).orderBy(desc(teams.createdAt));
+  try {
+    const result = await db.select().from(teams).orderBy(desc(teams.createdAt));
+    console.log("[Database] getAllTeams: Success, returned", result.length, "teams");
+    return result;
+  } catch (error) {
+    console.error("[Database] getAllTeams failed:", error);
+    throw error;
+  }
 }
 
 // ========== Players ==========
