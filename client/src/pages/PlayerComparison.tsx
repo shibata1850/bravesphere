@@ -48,6 +48,9 @@ export default function PlayerComparison() {
   const player1 = players.find(p => p.playerId === player1Id) || players[0];
   const player2 = players.find(p => p.playerId === player2Id) || players[1];
 
+  // データがない場合のガード
+  const hasData = player1 && player2;
+
   const compareValue = (val1: number, val2: number, higherIsBetter: boolean = true) => {
     if (Math.abs(val1 - val2) < 0.1) return 'equal';
     if (higherIsBetter) {
@@ -141,20 +144,33 @@ export default function PlayerComparison() {
               2人の選手のパフォーマンスを詳細に比較
             </p>
           </div>
-          <div className="flex gap-2">
-            <Link href={`/games/${id}/training/${player1Id}`}>
-              <Button variant="outline" size="sm">
-                {player1.playerName}のトレーニング
-              </Button>
-            </Link>
-            <Link href={`/games/${id}/training/${player2Id}`}>
-              <Button variant="outline" size="sm">
-                {player2.playerName}のトレーニング
-              </Button>
-            </Link>
-          </div>
+          {hasData && (
+            <div className="flex gap-2">
+              <Link href={`/games/${id}/training/${player1Id}`}>
+                <Button variant="outline" size="sm">
+                  {player1.playerName}のトレーニング
+                </Button>
+              </Link>
+              <Link href={`/games/${id}/training/${player2Id}`}>
+                <Button variant="outline" size="sm">
+                  {player2.playerName}のトレーニング
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
+        {!hasData && (
+          <Card className="border-2">
+            <CardContent className="py-12 text-center">
+              <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-lg text-muted-foreground">選手データがありません</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {hasData && (
+          <>
         {/* 選手情報ヘッダー */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card className="border-2 border-primary/50">
@@ -412,6 +428,8 @@ export default function PlayerComparison() {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
       </main>
     </div>
   );

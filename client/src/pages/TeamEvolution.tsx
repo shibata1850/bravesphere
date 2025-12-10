@@ -47,19 +47,34 @@ export default function TeamEvolution() {
 
   const wins = gamesData.filter(g => g.result === "W").length;
   const losses = gamesData.filter(g => g.result === "L").length;
-  const winRate = ((wins / gamesData.length) * 100).toFixed(1);
+  const winRate = gamesData.length > 0 ? ((wins / gamesData.length) * 100).toFixed(1) : "0";
 
   const latestGame = gamesData[gamesData.length - 1];
   const firstGame = gamesData[0];
-  
-  const offensiveImprovement = ((latestGame.offensiveRating - firstGame.offensiveRating) / firstGame.offensiveRating * 100).toFixed(1);
-  const defensiveImprovement = ((firstGame.defensiveRating - latestGame.defensiveRating) / firstGame.defensiveRating * 100).toFixed(1);
+
+  const offensiveImprovement = firstGame && latestGame
+    ? ((latestGame.offensiveRating - firstGame.offensiveRating) / firstGame.offensiveRating * 100).toFixed(1)
+    : "0";
+  const defensiveImprovement = firstGame && latestGame
+    ? ((firstGame.defensiveRating - latestGame.defensiveRating) / firstGame.defensiveRating * 100).toFixed(1)
+    : "0";
+
+  // データがない場合は早期リターン
+  const hasData = gamesData.length > 0;
 
   const renderLineChart = (data: number[], label: string, color: string) => {
+    if (data.length === 0) {
+      return (
+        <div className="relative h-48 border rounded-lg p-4 bg-muted/20 flex items-center justify-center">
+          <div className="text-muted-foreground">データがありません</div>
+        </div>
+      );
+    }
+
     const max = Math.max(...data);
     const min = Math.min(...data);
     const range = max - min || 1;
-    
+
     return (
       <div className="relative h-48 border rounded-lg p-4 bg-muted/20">
         <div className="absolute top-2 left-4 text-sm font-semibold text-muted-foreground">{label}</div>
