@@ -34,53 +34,8 @@ export default function TeamPractice() {
   const { teamId } = useParams();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // サンプルデータ
-  const practices: Practice[] = [
-    {
-      id: "1",
-      title: "オフェンス強化練習",
-      description: "ピック&ロールとトランジションオフェンスを中心に",
-      date: "2025-01-25",
-      duration: 120,
-      location: "メインアリーナ",
-      focus: "オフェンス",
-      drills: [
-        { name: "ウォームアップ", duration: 15, description: "ストレッチとランニング" },
-        { name: "ピック&ロールドリル", duration: 30, description: "スクリーナーとボールハンドラーの連携" },
-        { name: "トランジション3on2", duration: 25, description: "速攻の判断力向上" },
-        { name: "5on5スクリメージ", duration: 40, description: "実戦形式" },
-        { name: "クールダウン", duration: 10, description: "ストレッチ" },
-      ],
-      attendance: [
-        { playerId: "1", playerName: "田中 太郎", attended: true },
-        { playerId: "2", playerName: "佐藤 次郎", attended: true },
-        { playerId: "3", playerName: "鈴木 三郎", attended: false },
-      ],
-      notes: "全体的に良い動きだった。ピック&ロールのタイミングをもう少し改善する必要あり。",
-    },
-    {
-      id: "2",
-      title: "ディフェンス戦術練習",
-      description: "ゾーンディフェンスとトラップの練習",
-      date: "2025-01-27",
-      duration: 90,
-      location: "サブコート",
-      focus: "ディフェンス",
-      drills: [
-        { name: "ウォームアップ", duration: 10, description: "ディフェンススライド" },
-        { name: "2-3ゾーンドリル", duration: 25, description: "ポジショニングとローテーション" },
-        { name: "トラップ練習", duration: 20, description: "コーナーとサイドラインでのトラップ" },
-        { name: "5on5ディフェンス", duration: 30, description: "実戦形式" },
-        { name: "クールダウン", duration: 5, description: "ストレッチ" },
-      ],
-      attendance: [
-        { playerId: "1", playerName: "田中 太郎", attended: true },
-        { playerId: "2", playerName: "佐藤 次郎", attended: true },
-        { playerId: "3", playerName: "鈴木 三郎", attended: true },
-      ],
-      notes: "ゾーンディフェンスのローテーションが改善された。次回はプレスディフェンスも追加。",
-    },
-  ];
+  // TODO: APIからデータを取得する
+  const practices: Practice[] = [];
 
   const upcomingPractices = practices.filter(p => new Date(p.date) >= new Date());
   const pastPractices = practices.filter(p => new Date(p.date) < new Date());

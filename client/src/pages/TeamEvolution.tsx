@@ -37,51 +37,13 @@ interface PlayerEvolution {
 export default function TeamEvolution() {
   const { teamId } = useParams<{ teamId: string }>();
 
-  // サンプルデータ
-  const teamName = "東京ドラゴンズ";
-  const season = "2024-2025";
-  
-  const gamesData: GameData[] = [
-    { gameNumber: 1, date: "2024-10-05", opponent: "大阪タイガース", result: "L", score: "78-85", offensiveRating: 98, defensiveRating: 107, pace: 95, effectiveFG: 48.5, turnoverRate: 15.2, reboundRate: 48.0, freeThrowRate: 22.5 },
-    { gameNumber: 2, date: "2024-10-12", opponent: "名古屋ホークス", result: "W", score: "92-88", offensiveRating: 108, defensiveRating: 103, pace: 98, effectiveFG: 52.3, turnoverRate: 12.8, reboundRate: 52.0, freeThrowRate: 25.0 },
-    { gameNumber: 3, date: "2024-10-19", opponent: "福岡イーグルス", result: "W", score: "95-82", offensiveRating: 112, defensiveRating: 97, pace: 100, effectiveFG: 54.8, turnoverRate: 11.5, reboundRate: 55.0, freeThrowRate: 28.0 },
-    { gameNumber: 4, date: "2024-10-26", opponent: "札幌ベアーズ", result: "L", score: "88-91", offensiveRating: 105, defensiveRating: 108, pace: 96, effectiveFG: 50.2, turnoverRate: 13.5, reboundRate: 49.0, freeThrowRate: 24.5 },
-    { gameNumber: 5, date: "2024-11-02", opponent: "仙台ウルブズ", result: "W", score: "101-89", offensiveRating: 115, defensiveRating: 101, pace: 102, effectiveFG: 56.5, turnoverRate: 10.2, reboundRate: 58.0, freeThrowRate: 30.0 },
-    { gameNumber: 6, date: "2024-11-09", opponent: "広島ファルコンズ", result: "W", score: "98-85", offensiveRating: 113, defensiveRating: 98, pace: 99, effectiveFG: 55.8, turnoverRate: 9.8, reboundRate: 56.5, freeThrowRate: 29.5 },
-    { gameNumber: 7, date: "2024-11-16", opponent: "神戸パンサーズ", result: "W", score: "105-92", offensiveRating: 118, defensiveRating: 103, pace: 103, effectiveFG: 58.2, turnoverRate: 8.5, reboundRate: 60.0, freeThrowRate: 32.0 },
-    { gameNumber: 8, date: "2024-11-23", opponent: "京都サムライ", result: "W", score: "110-95", offensiveRating: 120, defensiveRating: 104, pace: 105, effectiveFG: 59.5, turnoverRate: 8.0, reboundRate: 61.5, freeThrowRate: 33.5 },
-  ];
+  // TODO: APIからデータを取得する
+  const teamName = "";
+  const season = "";
 
-  const playerEvolutions: PlayerEvolution[] = [
-    {
-      playerId: "10",
-      playerName: "田中 太郎",
-      games: [
-        { gameNumber: 1, points: 12, fieldGoalPercentage: 40.0, assists: 5, rebounds: 3, plusMinus: -5 },
-        { gameNumber: 2, points: 15, fieldGoalPercentage: 43.5, assists: 6, rebounds: 4, plusMinus: 2 },
-        { gameNumber: 3, points: 18, fieldGoalPercentage: 46.2, assists: 7, rebounds: 5, plusMinus: 8 },
-        { gameNumber: 4, points: 16, fieldGoalPercentage: 44.8, assists: 6, rebounds: 4, plusMinus: -2 },
-        { gameNumber: 5, points: 22, fieldGoalPercentage: 50.0, assists: 8, rebounds: 6, plusMinus: 12 },
-        { gameNumber: 6, points: 20, fieldGoalPercentage: 48.5, assists: 7, rebounds: 5, plusMinus: 10 },
-        { gameNumber: 7, points: 24, fieldGoalPercentage: 52.3, assists: 9, rebounds: 6, plusMinus: 15 },
-        { gameNumber: 8, points: 26, fieldGoalPercentage: 54.5, assists: 10, rebounds: 7, plusMinus: 18 },
-      ],
-    },
-    {
-      playerId: "23",
-      playerName: "佐藤 次郎",
-      games: [
-        { gameNumber: 1, points: 18, fieldGoalPercentage: 45.0, assists: 3, rebounds: 5, plusMinus: -3 },
-        { gameNumber: 2, points: 20, fieldGoalPercentage: 47.5, assists: 4, rebounds: 6, plusMinus: 5 },
-        { gameNumber: 3, points: 22, fieldGoalPercentage: 49.0, assists: 4, rebounds: 6, plusMinus: 10 },
-        { gameNumber: 4, points: 19, fieldGoalPercentage: 46.5, assists: 3, rebounds: 5, plusMinus: -1 },
-        { gameNumber: 5, points: 25, fieldGoalPercentage: 51.5, assists: 5, rebounds: 7, plusMinus: 14 },
-        { gameNumber: 6, points: 23, fieldGoalPercentage: 50.0, assists: 4, rebounds: 6, plusMinus: 12 },
-        { gameNumber: 7, points: 27, fieldGoalPercentage: 53.5, assists: 5, rebounds: 8, plusMinus: 16 },
-        { gameNumber: 8, points: 29, fieldGoalPercentage: 55.0, assists: 6, rebounds: 8, plusMinus: 20 },
-      ],
-    },
-  ];
+  const gamesData: GameData[] = [];
+
+  const playerEvolutions: PlayerEvolution[] = [];
 
   const wins = gamesData.filter(g => g.result === "W").length;
   const losses = gamesData.filter(g => g.result === "L").length;

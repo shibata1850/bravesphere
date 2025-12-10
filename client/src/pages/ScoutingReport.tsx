@@ -109,85 +109,14 @@ export default function ScoutingReport() {
     }));
   };
 
-  // サンプルデータ - ホームチーム
-  const homePlayerTendencies: PlayerTendency[] = [
-    {
-      name: "田中 太郎",
-      number: 10,
-      position: "PG",
-      strengths: ["3Pシュート", "パスビジョン", "ディフェンス"],
-      weaknesses: ["ドライブ", "フィジカル"],
-      shotPreference: "ウイング3P（右サイド優位）",
-      defensiveRole: "オンボールプレッシャー",
-    },
-    {
-      name: "佐藤 次郎",
-      number: 23,
-      position: "SG",
-      strengths: ["スピード", "ミドルレンジ", "カット"],
-      weaknesses: ["3Pシュート", "ディフェンス"],
-      shotPreference: "エルボー付近のプルアップ",
-      defensiveRole: "オフボールディフェンス",
-    },
-    {
-      name: "伊藤 五郎",
-      number: 32,
-      position: "C",
-      strengths: ["リバウンド", "ポストプレー", "ブロック"],
-      weaknesses: ["スピード", "フリースロー"],
-      shotPreference: "ペイント内のフック",
-      defensiveRole: "リムプロテクター",
-    },
-  ];
+  // TODO: APIからデータを取得する
+  const homePlayerTendencies: PlayerTendency[] = [];
 
-  const homeSetPlays: SetPlay[] = [
-    {
-      name: "Horns Flex",
-      frequency: "高頻度（試合中15-20回）",
-      description: "ホーンズフォーメーションからのフレックスカット。#23がベースラインをカットし、#15がトップで3Pを狙う。",
-      keyPlayers: ["#10 田中", "#23 佐藤", "#15 高橋"],
-      counters: ["スイッチディフェンス", "ハイポストプレッシャー", "ダウンスクリーンのファイトオーバー"],
-    },
-    {
-      name: "Spain Pick & Roll",
-      frequency: "中頻度（試合中8-12回）",
-      description: "ピック&ロールにバックスクリーンを組み合わせた高度なプレー。クラッチタイムに多用。",
-      keyPlayers: ["#10 田中", "#32 伊藤", "#23 佐藤"],
-      counters: ["バックスクリーン警戒", "ブリッツ（トラップ）"],
-    },
-  ];
+  const homeSetPlays: SetPlay[] = [];
 
-  // サンプルデータ - アウェイチーム
-  const awayPlayerTendencies: PlayerTendency[] = [
-    {
-      name: "山田 一郎",
-      number: 5,
-      position: "PG",
-      strengths: ["ドライブ", "パス", "リーダーシップ"],
-      weaknesses: ["3Pシュート", "ディフェンス"],
-      shotPreference: "ペイントアタック",
-      defensiveRole: "オンボールプレッシャー",
-    },
-    {
-      name: "中村 二郎",
-      number: 15,
-      position: "PF",
-      strengths: ["リバウンド", "ミドルレンジ", "スクリーン"],
-      weaknesses: ["スピード", "3Pシュート"],
-      shotPreference: "エルボーからのジャンパー",
-      defensiveRole: "ヘルプディフェンス",
-    },
-  ];
+  const awayPlayerTendencies: PlayerTendency[] = [];
 
-  const awaySetPlays: SetPlay[] = [
-    {
-      name: "High Pick & Roll (Spread)",
-      frequency: "高頻度（試合中20-25回）",
-      description: "1-4スプレッドからのシンプルなピック&ロール。#5のドライブ能力を最大限活用。",
-      keyPlayers: ["#5 山田", "#15 中村"],
-      counters: ["アンダースクリーン", "スイッチ&リカバー", "ブリッツ"],
-    },
-  ];
+  const awaySetPlays: SetPlay[] = [];
 
   const renderPlayerCard = (player: PlayerTendency) => (
     <Link href={`/games/${id}/players/${player.number}`}>

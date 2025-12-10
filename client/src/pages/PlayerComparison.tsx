@@ -42,55 +42,8 @@ export default function PlayerComparison() {
   const player1Id = searchParams.get('player1') || '10';
   const player2Id = searchParams.get('player2') || '23';
 
-  // サンプルデータ
-  const players: PlayerComparisonData[] = [
-    {
-      playerId: '10',
-      playerName: '田中 太郎',
-      jerseyNumber: '10',
-      position: 'PG',
-      team: '東京ドラゴンズ',
-      points: 18,
-      fieldGoalPercentage: 45.5,
-      threePointPercentage: 38.5,
-      freeThrowPercentage: 85.0,
-      assists: 7,
-      turnovers: 3,
-      rebounds: 5,
-      steals: 2,
-      blocks: 0,
-      plusMinus: 12,
-      effectiveFieldGoalPercentage: 52.3,
-      trueShootingPercentage: 58.7,
-      assistToTurnoverRatio: 2.33,
-      usageRate: 28.5,
-      offensiveRating: 115,
-      defensiveRating: 108,
-    },
-    {
-      playerId: '23',
-      playerName: '佐藤 次郎',
-      jerseyNumber: '23',
-      position: 'SG',
-      team: '東京ドラゴンズ',
-      points: 22,
-      fieldGoalPercentage: 48.2,
-      threePointPercentage: 35.8,
-      freeThrowPercentage: 78.5,
-      assists: 4,
-      turnovers: 2,
-      rebounds: 6,
-      steals: 1,
-      blocks: 1,
-      plusMinus: 8,
-      effectiveFieldGoalPercentage: 54.1,
-      trueShootingPercentage: 59.3,
-      assistToTurnoverRatio: 2.0,
-      usageRate: 32.1,
-      offensiveRating: 118,
-      defensiveRating: 110,
-    },
-  ];
+  // TODO: APIからデータを取得する
+  const players: PlayerComparisonData[] = [];
 
   const player1 = players.find(p => p.playerId === player1Id) || players[0];
   const player2 = players.find(p => p.playerId === player2Id) || players[1];
