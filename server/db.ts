@@ -1,6 +1,6 @@
 import { eq, and, desc } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { createPool, type Pool } from "mysql2/promise";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   InsertUser,
   users,
@@ -46,7 +46,7 @@ import {
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
-let _pool: Pool | null = null;
+let _client: ReturnType<typeof postgres> | null = null;
 let _db: ReturnType<typeof drizzle> | null = null;
 
 function maskConnectionString(connectionString: string) {
@@ -73,28 +73,29 @@ export async function getDb() {
     return null;
   }
 
-  if (!connectionString.startsWith("mysql")) {
+  // Accept postgres:// or postgresql:// schemes (Supabase uses these)
+  if (!connectionString.startsWith("postgres")) {
     console.warn(
-      `[Database] Unsupported DATABASE_URL scheme. Expected mysql-compatible connection string but received ${maskConnectionString(connectionString)}`,
+      `[Database] Unsupported DATABASE_URL scheme. Expected postgres-compatible connection string but received ${maskConnectionString(connectionString)}`,
     );
     return null;
   }
 
   try {
-    if (!_pool) {
-      _pool = createPool({
-        uri: connectionString,
-        waitForConnections: true,
-        connectionLimit: ENV.isProduction ? 1 : 5,
-        connectTimeout: 10_000,
-        ssl: { rejectUnauthorized: true },
+    if (!_client) {
+      _client = postgres(connectionString, {
+        max: ENV.isProduction ? 1 : 5,
+        idle_timeout: 20,
+        connect_timeout: 10,
+        ssl: "require",
+        prepare: false, // Required for Supabase Transaction mode
       });
     }
 
-    _db = drizzle(_pool);
+    _db = drizzle(_client);
   } catch (error) {
-    console.warn("[Database] Failed to create pool:", error);
-    _pool = null;
+    console.warn("[Database] Failed to create client:", error);
+    _client = null;
     _db = null;
   }
 
@@ -147,7 +148,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.id,
       set: updateSet,
     });
   } catch (error) {
@@ -504,8 +506,9 @@ export async function getPlaylistEventsByPlaylist(
 export async function savePdfSetting(setting: InsertPdfSetting) {
   const db = await getDb();
   if (!db) return null;
-  
-  const result = await db.insert(pdfSettings).values(setting).onDuplicateKeyUpdate({
+
+  const result = await db.insert(pdfSettings).values(setting).onConflictDoUpdate({
+    target: pdfSettings.id,
     set: {
       sections: setting.sections,
       updatedAt: new Date(),
@@ -517,7 +520,7 @@ export async function savePdfSetting(setting: InsertPdfSetting) {
 export async function getPdfSetting(userId: string, settingType: string) {
   const db = await getDb();
   if (!db) return null;
-  
+
   const result = await db
     .select()
     .from(pdfSettings)
@@ -528,7 +531,7 @@ export async function getPdfSetting(userId: string, settingType: string) {
       )
     )
     .limit(1);
-  
+
   return result.length > 0 ? result[0] : null;
 }
 
@@ -548,7 +551,7 @@ export async function createAnalysisJob(
   if (!db) throw new Error("Database not available");
 
   await db.insert(videoAnalysisJobs).values(data);
-  
+
   const result = await db
     .select()
     .from(videoAnalysisJobs)
@@ -570,16 +573,16 @@ export async function updateAnalysisJobStatus(
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
-  const updateData: any = { status };
-  
+  const updateData: Record<string, unknown> = { status };
+
   if (progress !== undefined) {
     updateData.progress = progress;
   }
-  
+
   if (errorMessage !== undefined) {
     updateData.errorMessage = errorMessage;
   }
-  
+
   if (status === "completed" || status === "failed") {
     updateData.completedAt = new Date();
   }
@@ -675,7 +678,7 @@ export async function createAnalyzedEvent(
   if (!db) throw new Error("Database not available");
 
   await db.insert(analyzedEvents).values(data);
-  
+
   const result = await db
     .select()
     .from(analyzedEvents)
@@ -752,7 +755,7 @@ export async function saveKeyFrame(
   if (!db) throw new Error("Database not available");
 
   await db.insert(videoKeyFrames).values(data);
-  
+
   const result = await db
     .select()
     .from(videoKeyFrames)
@@ -777,4 +780,3 @@ export async function getGameKeyFrames(gameId: string): Promise<VideoKeyFrame[]>
 
   return result;
 }
-
