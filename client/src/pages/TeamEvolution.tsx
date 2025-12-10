@@ -153,13 +153,13 @@ export default function TeamEvolution() {
             <CardHeader className="pb-3">
               <CardDescription>オフェンス改善</CardDescription>
               <CardTitle className="text-3xl flex items-center gap-2">
-                +{offensiveImprovement}%
+                {hasData ? `+${offensiveImprovement}%` : "-"}
                 <TrendingUp className="h-6 w-6 text-green-600" />
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground">
-                {firstGame.offensiveRating} → {latestGame.offensiveRating}
+                {hasData ? `${firstGame?.offensiveRating ?? '-'} → ${latestGame?.offensiveRating ?? '-'}` : "データなし"}
               </div>
             </CardContent>
           </Card>
@@ -168,13 +168,13 @@ export default function TeamEvolution() {
             <CardHeader className="pb-3">
               <CardDescription>ディフェンス改善</CardDescription>
               <CardTitle className="text-3xl flex items-center gap-2">
-                +{defensiveImprovement}%
+                {hasData ? `+${defensiveImprovement}%` : "-"}
                 <TrendingUp className="h-6 w-6 text-blue-600" />
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground">
-                {firstGame.defensiveRating} → {latestGame.defensiveRating}
+                {hasData ? `${firstGame?.defensiveRating ?? '-'} → ${latestGame?.defensiveRating ?? '-'}` : "データなし"}
               </div>
             </CardContent>
           </Card>
@@ -182,7 +182,7 @@ export default function TeamEvolution() {
           <Card className="border-2 border-purple-500/50">
             <CardHeader className="pb-3">
               <CardDescription>最新ペース</CardDescription>
-              <CardTitle className="text-3xl">{latestGame.pace}</CardTitle>
+              <CardTitle className="text-3xl">{latestGame?.pace ?? "-"}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-sm text-muted-foreground">
