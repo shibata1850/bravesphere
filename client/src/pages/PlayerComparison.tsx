@@ -42,58 +42,14 @@ export default function PlayerComparison() {
   const player1Id = searchParams.get('player1') || '10';
   const player2Id = searchParams.get('player2') || '23';
 
-  // サンプルデータ
-  const players: PlayerComparisonData[] = [
-    {
-      playerId: '10',
-      playerName: '田中 太郎',
-      jerseyNumber: '10',
-      position: 'PG',
-      team: '東京ドラゴンズ',
-      points: 18,
-      fieldGoalPercentage: 45.5,
-      threePointPercentage: 38.5,
-      freeThrowPercentage: 85.0,
-      assists: 7,
-      turnovers: 3,
-      rebounds: 5,
-      steals: 2,
-      blocks: 0,
-      plusMinus: 12,
-      effectiveFieldGoalPercentage: 52.3,
-      trueShootingPercentage: 58.7,
-      assistToTurnoverRatio: 2.33,
-      usageRate: 28.5,
-      offensiveRating: 115,
-      defensiveRating: 108,
-    },
-    {
-      playerId: '23',
-      playerName: '佐藤 次郎',
-      jerseyNumber: '23',
-      position: 'SG',
-      team: '東京ドラゴンズ',
-      points: 22,
-      fieldGoalPercentage: 48.2,
-      threePointPercentage: 35.8,
-      freeThrowPercentage: 78.5,
-      assists: 4,
-      turnovers: 2,
-      rebounds: 6,
-      steals: 1,
-      blocks: 1,
-      plusMinus: 8,
-      effectiveFieldGoalPercentage: 54.1,
-      trueShootingPercentage: 59.3,
-      assistToTurnoverRatio: 2.0,
-      usageRate: 32.1,
-      offensiveRating: 118,
-      defensiveRating: 110,
-    },
-  ];
+  // TODO: APIからデータを取得する
+  const players: PlayerComparisonData[] = [];
 
   const player1 = players.find(p => p.playerId === player1Id) || players[0];
   const player2 = players.find(p => p.playerId === player2Id) || players[1];
+
+  // データがない場合のガード
+  const hasData = player1 && player2;
 
   const compareValue = (val1: number, val2: number, higherIsBetter: boolean = true) => {
     if (Math.abs(val1 - val2) < 0.1) return 'equal';
@@ -188,20 +144,33 @@ export default function PlayerComparison() {
               2人の選手のパフォーマンスを詳細に比較
             </p>
           </div>
-          <div className="flex gap-2">
-            <Link href={`/games/${id}/training/${player1Id}`}>
-              <Button variant="outline" size="sm">
-                {player1.playerName}のトレーニング
-              </Button>
-            </Link>
-            <Link href={`/games/${id}/training/${player2Id}`}>
-              <Button variant="outline" size="sm">
-                {player2.playerName}のトレーニング
-              </Button>
-            </Link>
-          </div>
+          {hasData && (
+            <div className="flex gap-2">
+              <Link href={`/games/${id}/training/${player1Id}`}>
+                <Button variant="outline" size="sm">
+                  {player1.playerName}のトレーニング
+                </Button>
+              </Link>
+              <Link href={`/games/${id}/training/${player2Id}`}>
+                <Button variant="outline" size="sm">
+                  {player2.playerName}のトレーニング
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
 
+        {!hasData && (
+          <Card className="border-2">
+            <CardContent className="py-12 text-center">
+              <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-lg text-muted-foreground">選手データがありません</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {hasData && (
+          <>
         {/* 選手情報ヘッダー */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Card className="border-2 border-primary/50">
@@ -459,6 +428,8 @@ export default function PlayerComparison() {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
       </main>
     </div>
   );

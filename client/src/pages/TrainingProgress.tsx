@@ -36,29 +36,12 @@ export default function TrainingProgress() {
   const [logDialogOpen, setLogDialogOpen] = useState(false);
   const [measurementDialogOpen, setMeasurementDialogOpen] = useState(false);
 
-  // サンプルデータ
-  const playerName = "田中 太郎";
-  
-  const trainingLogs: TrainingLog[] = [
-    { id: "1", drillName: "ミドルレンジシューティングドリル", date: "2024-11-20", completed: true, duration: 20, successRate: 68, notes: "フォームが安定してきた" },
-    { id: "2", drillName: "リバウンドポジショニングドリル", date: "2024-11-20", completed: true, duration: 15, successRate: 75, notes: "" },
-    { id: "3", drillName: "ミドルレンジシューティングドリル", date: "2024-11-21", completed: true, duration: 20, successRate: 72, notes: "左サイドの成功率が向上" },
-    { id: "4", drillName: "バーティカルジャンプ強化", date: "2024-11-21", completed: false, duration: 0, successRate: 0, notes: "" },
-    { id: "5", drillName: "ミドルレンジシューティングドリル", date: "2024-11-22", completed: true, duration: 20, successRate: 70, notes: "" },
-    { id: "6", drillName: "フットワーク＆アジリティ", date: "2024-11-22", completed: true, duration: 15, successRate: 80, notes: "スピードアップを実感" },
-    { id: "7", drillName: "ハンドアイコーディネーション", date: "2024-11-23", completed: true, duration: 10, successRate: 85, notes: "" },
-  ];
+  // TODO: APIからデータを取得する
+  const playerName = "";
 
-  const measurements: Measurement[] = [
-    { id: "1", metricName: "ミドルレンジFG%", date: "2024-11-01", value: 333, unit: "%" }, // 33.3%
-    { id: "2", metricName: "ミドルレンジFG%", date: "2024-11-08", value: 365, unit: "%" }, // 36.5%
-    { id: "3", metricName: "ミドルレンジFG%", date: "2024-11-15", value: 388, unit: "%" }, // 38.8%
-    { id: "4", metricName: "ミドルレンジFG%", date: "2024-11-22", value: 415, unit: "%" }, // 41.5%
-    { id: "5", metricName: "リバウンド数", date: "2024-11-01", value: 4, unit: "回" },
-    { id: "6", metricName: "リバウンド数", date: "2024-11-08", value: 5, unit: "回" },
-    { id: "7", metricName: "リバウンド数", date: "2024-11-15", value: 5, unit: "回" },
-    { id: "8", metricName: "リバウンド数", date: "2024-11-22", value: 6, unit: "回" },
-  ];
+  const trainingLogs: TrainingLog[] = [];
+
+  const measurements: Measurement[] = [];
 
   // 週次統計
   const thisWeekLogs = trainingLogs.filter(log => {
@@ -88,7 +71,7 @@ export default function TrainingProgress() {
   const totalDuration = thisMonthLogs.filter(log => log.completed).reduce((sum, log) => sum + log.duration, 0);
 
   // 継続日数（連続でトレーニングした日数）
-  const streak = 5; // サンプル値
+  const streak = 0; // TODO: APIから取得
 
   const renderLineChart = (data: { date: string; value: number }[], label: string, color: string) => {
     if (data.length === 0) return <div className="text-center text-muted-foreground py-8">データがありません</div>;

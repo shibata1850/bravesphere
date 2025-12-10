@@ -381,139 +381,163 @@ var systemRouter = router({
 
 // server/db.ts
 import { eq, and, desc } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { createPool } from "mysql2/promise";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
 // drizzle/schema.ts
 import {
   boolean,
-  datetime,
-  float,
-  int,
-  mysqlEnum,
-  mysqlTable,
+  integer,
+  pgEnum,
+  pgTable,
+  real,
   text,
   timestamp,
   varchar
-} from "drizzle-orm/mysql-core";
-var users = mysqlTable("users", {
+} from "drizzle-orm/pg-core";
+var roleEnum = pgEnum("role", ["user", "admin"]);
+var analysisStatusEnum = pgEnum("analysisStatus", [
+  "pending",
+  "processing",
+  "completed",
+  "failed"
+]);
+var eventTypeEnum = pgEnum("eventType", [
+  "shot",
+  "rebound",
+  "assist",
+  "turnover",
+  "steal",
+  "block",
+  "foul",
+  "substitution"
+]);
+var shotTypeEnum = pgEnum("shotType", ["2P", "3P", "FT"]);
+var jobStatusEnum = pgEnum("jobStatus", [
+  "queued",
+  "downloading",
+  "analyzing_video",
+  "analyzing_events",
+  "completed",
+  "failed"
+]);
+var dataTypeEnum = pgEnum("dataType", [
+  "object_tracking",
+  "text_detection",
+  "shot_detection",
+  "label_detection"
+]);
+var frameTypeEnum = pgEnum("frameType", [
+  "shot_attempt",
+  "score_change",
+  "ball_possession_change",
+  "period_start",
+  "period_end"
+]);
+var users = pgTable("users", {
   id: varchar("id", { length: 64 }).primaryKey(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: roleEnum("role").default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow()
 });
-var teams = mysqlTable("teams", {
+var teams = pgTable("teams", {
   id: varchar("id", { length: 64 }).primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   organization: varchar("organization", { length: 100 }),
   createdBy: varchar("createdBy", { length: 64 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow()
 });
-var players = mysqlTable("players", {
+var players = pgTable("players", {
   id: varchar("id", { length: 64 }).primaryKey(),
   teamId: varchar("teamId", { length: 64 }).notNull(),
   name: varchar("name", { length: 100 }).notNull(),
-  number: int("number"),
+  number: integer("number"),
   position: varchar("position", { length: 20 }),
-  height: int("height"),
+  height: integer("height"),
   // cm
   createdAt: timestamp("createdAt").defaultNow()
 });
-var games = mysqlTable("games", {
+var games = pgTable("games", {
   id: varchar("id", { length: 64 }).primaryKey(),
   homeTeamId: varchar("homeTeamId", { length: 64 }).notNull(),
   awayTeamId: varchar("awayTeamId", { length: 64 }).notNull(),
-  gameDate: datetime("gameDate").notNull(),
+  gameDate: timestamp("gameDate").notNull(),
   venue: varchar("venue", { length: 100 }),
   videoUrl: text("videoUrl"),
   videoPath: text("videoPath"),
-  analysisStatus: mysqlEnum("analysisStatus", [
-    "pending",
-    "processing",
-    "completed",
-    "failed"
-  ]).default("pending").notNull(),
+  analysisStatus: analysisStatusEnum("analysisStatus").default("pending").notNull(),
   createdBy: varchar("createdBy", { length: 64 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow()
 });
-var events = mysqlTable("events", {
+var events = pgTable("events", {
   id: varchar("id", { length: 64 }).primaryKey(),
   gameId: varchar("gameId", { length: 64 }).notNull(),
-  timestamp: int("timestamp").notNull(),
+  timestamp: integer("timestamp").notNull(),
   // 秒単位
-  period: int("period").notNull(),
+  period: integer("period").notNull(),
   // ピリオド
-  eventType: mysqlEnum("eventType", [
-    "shot",
-    "rebound",
-    "assist",
-    "turnover",
-    "steal",
-    "block",
-    "foul",
-    "substitution"
-  ]).notNull(),
+  eventType: eventTypeEnum("eventType").notNull(),
   playerId: varchar("playerId", { length: 64 }),
   teamId: varchar("teamId", { length: 64 }).notNull(),
-  xCoord: float("xCoord"),
+  xCoord: real("xCoord"),
   // コート上のX座標
-  yCoord: float("yCoord"),
+  yCoord: real("yCoord"),
   // コート上のY座標
   success: boolean("success"),
   // ショットの成否
-  shotType: mysqlEnum("shotType", ["2P", "3P", "FT"]),
+  shotType: shotTypeEnum("shotType"),
   // ショットタイプ
   assistedBy: varchar("assistedBy", { length: 64 }),
   // アシストした選手ID
   createdAt: timestamp("createdAt").defaultNow()
 });
-var stats = mysqlTable("stats", {
+var stats = pgTable("stats", {
   id: varchar("id", { length: 64 }).primaryKey(),
   gameId: varchar("gameId", { length: 64 }).notNull(),
   playerId: varchar("playerId", { length: 64 }).notNull(),
   teamId: varchar("teamId", { length: 64 }).notNull(),
-  points: int("points").default(0).notNull(),
-  rebounds: int("rebounds").default(0).notNull(),
-  assists: int("assists").default(0).notNull(),
-  steals: int("steals").default(0).notNull(),
-  blocks: int("blocks").default(0).notNull(),
-  turnovers: int("turnovers").default(0).notNull(),
-  fgm: int("fgm").default(0).notNull(),
+  points: integer("points").default(0).notNull(),
+  rebounds: integer("rebounds").default(0).notNull(),
+  assists: integer("assists").default(0).notNull(),
+  steals: integer("steals").default(0).notNull(),
+  blocks: integer("blocks").default(0).notNull(),
+  turnovers: integer("turnovers").default(0).notNull(),
+  fgm: integer("fgm").default(0).notNull(),
   // FG成功数
-  fga: int("fga").default(0).notNull(),
+  fga: integer("fga").default(0).notNull(),
   // FG試投数
-  fg3m: int("fg3m").default(0).notNull(),
+  fg3m: integer("fg3m").default(0).notNull(),
   // 3P成功数
-  fg3a: int("fg3a").default(0).notNull(),
+  fg3a: integer("fg3a").default(0).notNull(),
   // 3P試投数
-  ftm: int("ftm").default(0).notNull(),
+  ftm: integer("ftm").default(0).notNull(),
   // FT成功数
-  fta: int("fta").default(0).notNull(),
+  fta: integer("fta").default(0).notNull(),
   // FT試投数
   createdAt: timestamp("createdAt").defaultNow()
 });
-var lineups = mysqlTable("lineups", {
+var lineups = pgTable("lineups", {
   id: varchar("id", { length: 64 }).primaryKey(),
   gameId: varchar("gameId", { length: 64 }).notNull(),
   teamId: varchar("teamId", { length: 64 }).notNull(),
-  period: int("period").notNull(),
-  startTime: int("startTime").notNull(),
+  period: integer("period").notNull(),
+  startTime: integer("startTime").notNull(),
   // 秒単位
-  endTime: int("endTime").notNull(),
+  endTime: integer("endTime").notNull(),
   // 秒単位
   player1Id: varchar("player1Id", { length: 64 }).notNull(),
   player2Id: varchar("player2Id", { length: 64 }).notNull(),
   player3Id: varchar("player3Id", { length: 64 }).notNull(),
   player4Id: varchar("player4Id", { length: 64 }).notNull(),
   player5Id: varchar("player5Id", { length: 64 }).notNull(),
-  pointsScored: int("pointsScored").default(0).notNull(),
-  pointsAllowed: int("pointsAllowed").default(0).notNull(),
+  pointsScored: integer("pointsScored").default(0).notNull(),
+  pointsAllowed: integer("pointsAllowed").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow()
 });
-var pdfSettings = mysqlTable("pdf_settings", {
+var pdfSettings = pgTable("pdf_settings", {
   id: varchar("id", { length: 64 }).primaryKey(),
   userId: varchar("userId", { length: 64 }).notNull(),
   settingType: varchar("settingType", { length: 64 }).notNull(),
@@ -521,28 +545,28 @@ var pdfSettings = mysqlTable("pdf_settings", {
   sections: text("sections").notNull(),
   // JSON string
   createdAt: timestamp("createdAt").defaultNow(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow()
+  updatedAt: timestamp("updatedAt").defaultNow()
 });
-var trainingLogs = mysqlTable("training_logs", {
+var trainingLogs = pgTable("training_logs", {
   id: varchar("id", { length: 64 }).primaryKey(),
   playerId: varchar("playerId", { length: 64 }).notNull(),
   drillName: varchar("drillName", { length: 255 }).notNull(),
   date: timestamp("date").notNull(),
   completed: boolean("completed").default(false).notNull(),
-  duration: int("duration"),
+  duration: integer("duration"),
   // 分単位
-  successRate: int("successRate"),
+  successRate: integer("successRate"),
   // パーセンテージ
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow()
 });
-var teamPractices = mysqlTable("team_practices", {
+var teamPractices = pgTable("team_practices", {
   id: varchar("id", { length: 64 }).primaryKey(),
   teamId: varchar("teamId", { length: 64 }).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   practiceDate: timestamp("practiceDate").notNull(),
-  duration: int("duration").notNull(),
+  duration: integer("duration").notNull(),
   // 分単位
   location: varchar("location", { length: 255 }),
   focus: varchar("focus", { length: 100 }),
@@ -556,19 +580,19 @@ var teamPractices = mysqlTable("team_practices", {
   createdAt: timestamp("createdAt").defaultNow(),
   updatedAt: timestamp("updatedAt").defaultNow()
 });
-var measurements = mysqlTable("measurements", {
+var measurements = pgTable("measurements", {
   id: varchar("id", { length: 64 }).primaryKey(),
   playerId: varchar("playerId", { length: 64 }).notNull(),
   date: timestamp("date").notNull(),
   metricName: varchar("metricName", { length: 255 }).notNull(),
   // 例: "ミドルレンジFG%", "リバウンド数"
-  value: int("value").notNull(),
+  value: integer("value").notNull(),
   // 実際の値（小数点は整数化して保存）
   unit: varchar("unit", { length: 50 }),
   // 単位（%、回、など）
   createdAt: timestamp("createdAt").defaultNow()
 });
-var playlists = mysqlTable("playlists", {
+var playlists = pgTable("playlists", {
   id: varchar("id", { length: 64 }).primaryKey(),
   gameId: varchar("gameId", { length: 64 }).notNull(),
   name: varchar("name", { length: 100 }).notNull(),
@@ -580,26 +604,19 @@ var playlists = mysqlTable("playlists", {
   createdBy: varchar("createdBy", { length: 64 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow()
 });
-var playlistEvents = mysqlTable("playlistEvents", {
+var playlistEvents = pgTable("playlistEvents", {
   id: varchar("id", { length: 64 }).primaryKey(),
   playlistId: varchar("playlistId", { length: 64 }).notNull(),
   eventId: varchar("eventId", { length: 64 }).notNull(),
-  sequenceOrder: int("sequenceOrder").notNull(),
+  sequenceOrder: integer("sequenceOrder").notNull(),
   // プレイリスト内の順序
   createdAt: timestamp("createdAt").defaultNow()
 });
-var videoAnalysisJobs = mysqlTable("videoAnalysisJobs", {
+var videoAnalysisJobs = pgTable("videoAnalysisJobs", {
   id: varchar("id", { length: 64 }).primaryKey(),
   gameId: varchar("gameId", { length: 64 }).notNull(),
-  status: mysqlEnum("status", [
-    "queued",
-    "downloading",
-    "analyzing_video",
-    "analyzing_events",
-    "completed",
-    "failed"
-  ]).default("queued").notNull(),
-  progress: int("progress").default(0).notNull(),
+  status: jobStatusEnum("status").default("queued").notNull(),
+  progress: integer("progress").default(0).notNull(),
   // 0-100
   videoIntelligenceJobId: varchar("videoIntelligenceJobId", { length: 255 }),
   errorMessage: text("errorMessage"),
@@ -607,67 +624,47 @@ var videoAnalysisJobs = mysqlTable("videoAnalysisJobs", {
   completedAt: timestamp("completedAt"),
   createdAt: timestamp("createdAt").defaultNow()
 });
-var videoTrackingData = mysqlTable("videoTrackingData", {
+var videoTrackingData = pgTable("videoTrackingData", {
   id: varchar("id", { length: 64 }).primaryKey(),
   gameId: varchar("gameId", { length: 64 }).notNull(),
   jobId: varchar("jobId", { length: 64 }).notNull(),
-  dataType: mysqlEnum("dataType", [
-    "object_tracking",
-    "text_detection",
-    "shot_detection",
-    "label_detection"
-  ]).notNull(),
-  timestamp: float("timestamp").notNull(),
+  dataType: dataTypeEnum("dataType").notNull(),
+  timestamp: real("timestamp").notNull(),
   // 秒単位（小数点対応）
   data: text("data").notNull(),
   // JSON形式で保存
   createdAt: timestamp("createdAt").defaultNow()
 });
-var videoKeyFrames = mysqlTable("videoKeyFrames", {
+var videoKeyFrames = pgTable("videoKeyFrames", {
   id: varchar("id", { length: 64 }).primaryKey(),
   gameId: varchar("gameId", { length: 64 }).notNull(),
   jobId: varchar("jobId", { length: 64 }).notNull(),
-  timestamp: float("timestamp").notNull(),
+  timestamp: real("timestamp").notNull(),
   // 秒単位
-  frameType: mysqlEnum("frameType", [
-    "shot_attempt",
-    "score_change",
-    "ball_possession_change",
-    "period_start",
-    "period_end"
-  ]).notNull(),
+  frameType: frameTypeEnum("frameType").notNull(),
   imagePath: text("imagePath").notNull(),
   // S3パス
   imageUrl: text("imageUrl").notNull(),
   // 公開URL
   createdAt: timestamp("createdAt").defaultNow()
 });
-var analyzedEvents = mysqlTable("analyzedEvents", {
+var analyzedEvents = pgTable("analyzedEvents", {
   id: varchar("id", { length: 64 }).primaryKey(),
   gameId: varchar("gameId", { length: 64 }).notNull(),
   jobId: varchar("jobId", { length: 64 }).notNull(),
-  timestamp: float("timestamp").notNull(),
+  timestamp: real("timestamp").notNull(),
   // 秒単位
-  eventType: mysqlEnum("eventType", [
-    "shot",
-    "rebound",
-    "assist",
-    "turnover",
-    "steal",
-    "block",
-    "foul",
-    "substitution"
-  ]).notNull(),
+  eventType: eventTypeEnum("eventType").notNull(),
   playerId: varchar("playerId", { length: 64 }),
-  playerNumber: int("playerNumber"),
+  playerNumber: integer("playerNumber"),
   // 背番号（選手未特定時）
   teamId: varchar("teamId", { length: 64 }).notNull(),
-  xCoord: float("xCoord"),
-  yCoord: float("yCoord"),
+  xCoord: real("xCoord"),
+  yCoord: real("yCoord"),
   success: boolean("success"),
-  shotType: mysqlEnum("shotType", ["2P", "3P", "FT"]),
+  shotType: shotTypeEnum("shotType"),
   assistedBy: varchar("assistedBy", { length: 64 }),
-  confidence: float("confidence").notNull(),
+  confidence: real("confidence").notNull(),
   // 0.0-1.0
   description: text("description"),
   // Geminiが生成した説明
@@ -680,7 +677,7 @@ var analyzedEvents = mysqlTable("analyzedEvents", {
 
 // server/db.ts
 init_env();
-var _pool = null;
+var _client = null;
 var _db = null;
 function maskConnectionString(connectionString) {
   try {
@@ -702,26 +699,24 @@ async function getDb() {
     console.warn("[Database] DATABASE_URL is not set");
     return null;
   }
-  if (!connectionString.startsWith("mysql")) {
+  if (!connectionString.startsWith("postgres")) {
     console.warn(
-      `[Database] Unsupported DATABASE_URL scheme. Expected mysql-compatible connection string but received ${maskConnectionString(connectionString)}`
+      `[Database] Unsupported DATABASE_URL scheme. Expected postgres-compatible connection string but received ${maskConnectionString(connectionString)}`
     );
     return null;
   }
   try {
-    if (!_pool) {
-      _pool = createPool({
-        uri: connectionString,
-        waitForConnections: true,
-        connectionLimit: ENV.isProduction ? 1 : 5,
-        connectTimeout: 1e4,
-        ssl: { rejectUnauthorized: true }
+    if (!_client) {
+      _client = postgres(connectionString, {
+        max: ENV.isProduction ? 1 : 5,
+        idle_timeout: 20,
+        connect_timeout: 10
       });
     }
-    _db = drizzle(_pool);
+    _db = drizzle(_client);
   } catch (error) {
-    console.warn("[Database] Failed to create pool:", error);
-    _pool = null;
+    console.warn("[Database] Failed to create connection:", error);
+    _client = null;
     _db = null;
   }
   return _db;
@@ -763,7 +758,8 @@ async function upsertUser(user) {
     if (Object.keys(updateSet).length === 0) {
       updateSet.lastSignedIn = /* @__PURE__ */ new Date();
     }
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.id,
       set: updateSet
     });
   } catch (error) {
@@ -955,7 +951,8 @@ async function getPlaylistEventsByPlaylist(playlistId) {
 async function savePdfSetting(setting) {
   const db = await getDb();
   if (!db) return null;
-  const result = await db.insert(pdfSettings).values(setting).onDuplicateKeyUpdate({
+  const result = await db.insert(pdfSettings).values(setting).onConflictDoUpdate({
+    target: pdfSettings.id,
     set: {
       sections: setting.sections,
       updatedAt: /* @__PURE__ */ new Date()
