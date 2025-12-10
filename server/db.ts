@@ -31,6 +31,9 @@ import {
   pdfSettings,
   InsertPdfSetting,
   PdfSetting,
+  teamPractices,
+  InsertTeamPractice,
+  TeamPractice,
   videoAnalysisJobs,
   InsertVideoAnalysisJob,
   VideoAnalysisJob,
@@ -776,5 +779,83 @@ export async function getGameKeyFrames(gameId: string): Promise<VideoKeyFrame[]>
     .orderBy(videoKeyFrames.timestamp);
 
   return result;
+}
+
+// ==========================================
+// Team Practices Functions
+// ==========================================
+
+/**
+ * チーム練習を作成
+ */
+export async function createTeamPractice(
+  data: InsertTeamPractice
+): Promise<TeamPractice> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(teamPractices).values(data);
+
+  const result = await db
+    .select()
+    .from(teamPractices)
+    .where(eq(teamPractices.id, data.id))
+    .limit(1);
+
+  return result[0];
+}
+
+/**
+ * チーム練習を取得
+ */
+export async function getTeamPractice(id: string): Promise<TeamPractice | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(teamPractices)
+    .where(eq(teamPractices.id, id))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * チームの練習一覧を取得
+ */
+export async function getTeamPracticesByTeam(teamId: string): Promise<TeamPractice[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(teamPractices)
+    .where(eq(teamPractices.teamId, teamId))
+    .orderBy(desc(teamPractices.practiceDate));
+}
+
+/**
+ * チーム練習を更新
+ */
+export async function updateTeamPractice(
+  id: string,
+  updates: Partial<InsertTeamPractice>
+): Promise<TeamPractice | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  await db.update(teamPractices).set(updates).where(eq(teamPractices.id, id));
+  return getTeamPractice(id);
+}
+
+/**
+ * チーム練習を削除
+ */
+export async function deleteTeamPractice(id: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.delete(teamPractices).where(eq(teamPractices.id, id));
 }
 

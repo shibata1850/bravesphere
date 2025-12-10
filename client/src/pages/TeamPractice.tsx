@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { APP_LOGO, APP_TITLE } from "@/const";
-import { ArrowLeft, Plus, Calendar, Clock, MapPin, Target, Users, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, Clock, MapPin, Target, Users, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { trpc } from "@/lib/trpc";
 
 interface Drill {
   name: string;
@@ -44,56 +45,23 @@ export default function TeamPractice() {
     focus: "",
   });
 
-  // サンプルデータ
-  const initialPractices: Practice[] = [
-    {
-      id: "1",
-      title: "オフェンス強化練習",
-      description: "ピック&ロールとトランジションオフェンスを中心に",
-      date: "2025-01-25",
-      duration: 120,
-      location: "メインアリーナ",
-      focus: "オフェンス",
-      drills: [
-        { name: "ウォームアップ", duration: 15, description: "ストレッチとランニング" },
-        { name: "ピック&ロールドリル", duration: 30, description: "スクリーナーとボールハンドラーの連携" },
-        { name: "トランジション3on2", duration: 25, description: "速攻の判断力向上" },
-        { name: "5on5スクリメージ", duration: 40, description: "実戦形式" },
-        { name: "クールダウン", duration: 10, description: "ストレッチ" },
-      ],
-      attendance: [
-        { playerId: "1", playerName: "田中 太郎", attended: true },
-        { playerId: "2", playerName: "佐藤 次郎", attended: true },
-        { playerId: "3", playerName: "鈴木 三郎", attended: false },
-      ],
-      notes: "全体的に良い動きだった。ピック&ロールのタイミングをもう少し改善する必要あり。",
-    },
-    {
-      id: "2",
-      title: "ディフェンス戦術練習",
-      description: "ゾーンディフェンスとトラップの練習",
-      date: "2025-01-27",
-      duration: 90,
-      location: "サブコート",
-      focus: "ディフェンス",
-      drills: [
-        { name: "ウォームアップ", duration: 10, description: "ディフェンススライド" },
-        { name: "2-3ゾーンドリル", duration: 25, description: "ポジショニングとローテーション" },
-        { name: "トラップ練習", duration: 20, description: "コーナーとサイドラインでのトラップ" },
-        { name: "5on5ディフェンス", duration: 30, description: "実戦形式" },
-        { name: "クールダウン", duration: 5, description: "ストレッチ" },
-      ],
-      attendance: [
-        { playerId: "1", playerName: "田中 太郎", attended: true },
-        { playerId: "2", playerName: "佐藤 次郎", attended: true },
-        { playerId: "3", playerName: "鈴木 三郎", attended: true },
-      ],
-      notes: "ゾーンディフェンスのローテーションが改善された。次回はプレスディフェンスも追加。",
-    },
-  ];
+  // tRPC queries and mutations
+  const utils = trpc.useUtils();
+  const { data: apiPractices, isLoading } = trpc.practices.listByTeam.useQuery(
+    { teamId: teamId || "" },
+    { enabled: !!teamId }
+  );
 
-  // 練習リストの状態管理
-  const [practices, setPractices] = useState<Practice[]>(initialPractices);
+  const createPracticeMutation = trpc.practices.create.useMutation({
+    onSuccess: () => {
+      utils.practices.listByTeam.invalidate({ teamId: teamId || "" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: (error) => {
+      alert(`エラーが発生しました: ${error.message}`);
+    },
+  });
 
   // フォーカスのラベルマッピング
   const focusLabels: Record<string, string> = {
@@ -103,6 +71,20 @@ export default function TeamPractice() {
     tactical: "戦術",
     mixed: "総合",
   };
+
+  // APIデータをフロントエンド用の形式に変換
+  const practices: Practice[] = (apiPractices || []).map((p) => ({
+    id: p.id,
+    title: p.title,
+    description: p.description || "",
+    date: p.practiceDate ? new Date(p.practiceDate).toISOString().split("T")[0] : "",
+    duration: p.duration,
+    location: p.location || "未定",
+    focus: p.focus || "総合",
+    drills: p.drills ? JSON.parse(p.drills) : [],
+    attendance: p.attendance ? JSON.parse(p.attendance) : [],
+    notes: p.notes || "",
+  }));
 
   // フォームリセット
   const resetForm = () => {
@@ -123,22 +105,20 @@ export default function TeamPractice() {
       return;
     }
 
-    const newPractice: Practice = {
-      id: Date.now().toString(),
-      title: formData.title,
-      description: formData.description,
-      date: formData.date.split("T")[0], // datetime-localからdateを抽出
-      duration: parseInt(formData.duration, 10),
-      location: formData.location || "未定",
-      focus: focusLabels[formData.focus] || "総合",
-      drills: [],
-      attendance: [],
-      notes: "",
-    };
+    if (!teamId) {
+      alert("チームIDが不明です");
+      return;
+    }
 
-    setPractices([...practices, newPractice]);
-    resetForm();
-    setIsDialogOpen(false);
+    createPracticeMutation.mutate({
+      teamId: teamId,
+      title: formData.title,
+      description: formData.description || undefined,
+      practiceDate: new Date(formData.date).toISOString(),
+      duration: parseInt(formData.duration, 10),
+      location: formData.location || undefined,
+      focus: focusLabels[formData.focus] || undefined,
+    });
   };
 
   const upcomingPractices = practices.filter(p => new Date(p.date) >= new Date());
@@ -256,11 +236,18 @@ export default function TeamPractice() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => { resetForm(); setIsDialogOpen(false); }}>
+                <Button variant="outline" onClick={() => { resetForm(); setIsDialogOpen(false); }} disabled={createPracticeMutation.isPending}>
                   キャンセル
                 </Button>
-                <Button onClick={handleAddPractice}>
-                  追加
+                <Button onClick={handleAddPractice} disabled={createPracticeMutation.isPending}>
+                  {createPracticeMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      追加中...
+                    </>
+                  ) : (
+                    "追加"
+                  )}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -270,6 +257,18 @@ export default function TeamPractice() {
         {/* 今後の練習 */}
         <div className="mb-12">
           <h3 className="text-2xl font-bold mb-6">今後の練習</h3>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">読み込み中...</span>
+            </div>
+          ) : upcomingPractices.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-12 text-center text-muted-foreground">
+                今後の練習予定はありません。「練習を追加」ボタンから新しい練習を追加してください。
+              </CardContent>
+            </Card>
+          ) : (
           <div className="grid gap-6">
             {upcomingPractices.map((practice) => (
               <Card key={practice.id} className="border-2 hover:shadow-lg transition-shadow">
@@ -335,11 +334,24 @@ export default function TeamPractice() {
               </Card>
             ))}
           </div>
+          )}
         </div>
 
         {/* 過去の練習 */}
         <div>
           <h3 className="text-2xl font-bold mb-6">過去の練習</h3>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">読み込み中...</span>
+            </div>
+          ) : pastPractices.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-12 text-center text-muted-foreground">
+                過去の練習記録はありません。
+              </CardContent>
+            </Card>
+          ) : (
           <div className="grid gap-6">
             {pastPractices.map((practice) => (
               <Card key={practice.id} className="border hover:shadow-lg transition-shadow">
@@ -397,6 +409,7 @@ export default function TeamPractice() {
               </Card>
             ))}
           </div>
+          )}
         </div>
       </main>
     </div>
