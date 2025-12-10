@@ -541,6 +541,84 @@ export const appRouter = router({
       }),
   }),
 
+  // Team Practices
+  teamPractices: router({
+    listByTeam: protectedProcedure
+      .input(z.object({ teamId: z.string() }))
+      .query(async ({ input }) => {
+        return db.getTeamPracticesByTeam(input.teamId);
+      }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .query(async ({ input }) => {
+        return db.getTeamPractice(input.id);
+      }),
+
+    create: protectedProcedure
+      .input(
+        z.object({
+          teamId: z.string(),
+          title: z.string(),
+          description: z.string().optional(),
+          practiceDate: z.string(),
+          duration: z.number(),
+          location: z.string().optional(),
+          focus: z.string().optional(),
+          drills: z.string().optional(),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const practice = await db.createTeamPractice({
+          id: randomUUID(),
+          teamId: input.teamId,
+          title: input.title,
+          description: input.description || null,
+          practiceDate: new Date(input.practiceDate),
+          duration: input.duration,
+          location: input.location || null,
+          focus: input.focus || null,
+          drills: input.drills || null,
+          attendance: null,
+          notes: input.notes || null,
+          createdBy: ctx.user.id,
+        });
+        return practice;
+      }),
+
+    update: protectedProcedure
+      .input(
+        z.object({
+          id: z.string(),
+          title: z.string().optional(),
+          description: z.string().optional(),
+          practiceDate: z.string().optional(),
+          duration: z.number().optional(),
+          location: z.string().optional(),
+          focus: z.string().optional(),
+          drills: z.string().optional(),
+          attendance: z.string().optional(),
+          notes: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { id, practiceDate, ...rest } = input;
+        const updates: any = { ...rest };
+        if (practiceDate) {
+          updates.practiceDate = new Date(practiceDate);
+        }
+        return db.updateTeamPractice(id, updates);
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .mutation(async ({ input }) => {
+        await db.deleteTeamPractice(input.id);
+        return { success: true };
+      }),
+  }),
+
   // Video Analysis
   videoAnalysis: router({
     // 解析ジョブを作成

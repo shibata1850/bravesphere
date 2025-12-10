@@ -1012,6 +1012,35 @@ async function verifyAnalyzedEvent(eventId) {
   if (!db) throw new Error("Database not available");
   await db.update(analyzedEvents).set({ verified: true }).where(eq(analyzedEvents.id, eventId));
 }
+async function createTeamPractice(practice) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.insert(teamPractices).values(practice);
+  const result = await db.select().from(teamPractices).where(eq(teamPractices.id, practice.id)).limit(1);
+  return result[0];
+}
+async function getTeamPractice(id) {
+  const db = await getDb();
+  if (!db) return void 0;
+  const result = await db.select().from(teamPractices).where(eq(teamPractices.id, id)).limit(1);
+  return result.length > 0 ? result[0] : void 0;
+}
+async function getTeamPracticesByTeam(teamId) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(teamPractices).where(eq(teamPractices.teamId, teamId)).orderBy(desc(teamPractices.practiceDate));
+}
+async function updateTeamPractice(id, updates) {
+  const db = await getDb();
+  if (!db) return void 0;
+  await db.update(teamPractices).set({ ...updates, updatedAt: /* @__PURE__ */ new Date() }).where(eq(teamPractices.id, id));
+  return getTeamPractice(id);
+}
+async function deleteTeamPractice(id) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(teamPractices).where(eq(teamPractices.id, id));
+}
 
 // server/routers.ts
 init_storage();
@@ -1435,6 +1464,69 @@ var appRouter = router({
         input.sections || {}
       );
       return { success: true, url };
+    })
+  }),
+  // Team Practices
+  teamPractices: router({
+    listByTeam: protectedProcedure.input(z2.object({ teamId: z2.string() })).query(async ({ input }) => {
+      return getTeamPracticesByTeam(input.teamId);
+    }),
+    get: protectedProcedure.input(z2.object({ id: z2.string() })).query(async ({ input }) => {
+      return getTeamPractice(input.id);
+    }),
+    create: protectedProcedure.input(
+      z2.object({
+        teamId: z2.string(),
+        title: z2.string(),
+        description: z2.string().optional(),
+        practiceDate: z2.string(),
+        duration: z2.number(),
+        location: z2.string().optional(),
+        focus: z2.string().optional(),
+        drills: z2.string().optional(),
+        notes: z2.string().optional()
+      })
+    ).mutation(async ({ input, ctx }) => {
+      const practice = await createTeamPractice({
+        id: randomUUID(),
+        teamId: input.teamId,
+        title: input.title,
+        description: input.description || null,
+        practiceDate: new Date(input.practiceDate),
+        duration: input.duration,
+        location: input.location || null,
+        focus: input.focus || null,
+        drills: input.drills || null,
+        attendance: null,
+        notes: input.notes || null,
+        createdBy: ctx.user.id
+      });
+      return practice;
+    }),
+    update: protectedProcedure.input(
+      z2.object({
+        id: z2.string(),
+        title: z2.string().optional(),
+        description: z2.string().optional(),
+        practiceDate: z2.string().optional(),
+        duration: z2.number().optional(),
+        location: z2.string().optional(),
+        focus: z2.string().optional(),
+        drills: z2.string().optional(),
+        attendance: z2.string().optional(),
+        notes: z2.string().optional()
+      })
+    ).mutation(async ({ input }) => {
+      const { id, practiceDate, ...rest } = input;
+      const updates = { ...rest };
+      if (practiceDate) {
+        updates.practiceDate = new Date(practiceDate);
+      }
+      return updateTeamPractice(id, updates);
+    }),
+    delete: protectedProcedure.input(z2.object({ id: z2.string() })).mutation(async ({ input }) => {
+      await deleteTeamPractice(input.id);
+      return { success: true };
     })
   }),
   // Video Analysis
