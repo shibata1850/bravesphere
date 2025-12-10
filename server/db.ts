@@ -86,9 +86,9 @@ export async function getDb() {
   try {
     if (!_client) {
       _client = postgres(connectionString, {
-        max: ENV.isProduction ? 1 : 5,
+        max: ENV.isProduction ? 5 : 10,
         idle_timeout: 20,
-        connect_timeout: 10,
+        connect_timeout: 15,
       });
     }
 

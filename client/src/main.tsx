@@ -52,10 +52,14 @@ const trpcClient = trpc.createClient({
         };
       },
       fetch(input, init) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 55000); // 55秒タイムアウト
+
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
-        });
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeoutId));
       },
     }),
   ],
