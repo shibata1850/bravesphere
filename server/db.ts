@@ -83,18 +83,26 @@ export async function getDb() {
 
   try {
     if (!_client) {
+      console.log("[Database] Creating new PostgreSQL client...");
+      console.log("[Database] Host:", maskConnectionString(connectionString));
+
       _client = postgres(connectionString, {
         max: ENV.isProduction ? 1 : 5,
         idle_timeout: 20,
-        connect_timeout: 10,
-        ssl: "require",
-        prepare: false, // Required for Supabase Transaction mode
+        connect_timeout: 30,
+        ssl: { rejectUnauthorized: false }, // Required for Supabase pooler
+        prepare: false, // Required for Supabase Transaction mode (pgbouncer)
+        connection: {
+          application_name: "bravesphere",
+        },
       });
+
+      console.log("[Database] PostgreSQL client created successfully");
     }
 
     _db = drizzle(_client);
   } catch (error) {
-    console.warn("[Database] Failed to create client:", error);
+    console.error("[Database] Failed to create client:", error);
     _client = null;
     _db = null;
   }
