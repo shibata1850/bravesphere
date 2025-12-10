@@ -31,6 +31,9 @@ import {
   pdfSettings,
   InsertPdfSetting,
   PdfSetting,
+  teamPractices,
+  InsertTeamPractice,
+  TeamPractice,
   videoAnalysisJobs,
   InsertVideoAnalysisJob,
   VideoAnalysisJob,
@@ -776,5 +779,70 @@ export async function getGameKeyFrames(gameId: string): Promise<VideoKeyFrame[]>
     .orderBy(videoKeyFrames.timestamp);
 
   return result;
+}
+
+// ========== Team Practices ==========
+
+export async function createTeamPractice(
+  practice: InsertTeamPractice
+): Promise<TeamPractice> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(teamPractices).values(practice);
+  const result = await db
+    .select()
+    .from(teamPractices)
+    .where(eq(teamPractices.id, practice.id))
+    .limit(1);
+  return result[0];
+}
+
+export async function getTeamPractice(
+  id: string
+): Promise<TeamPractice | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(teamPractices)
+    .where(eq(teamPractices.id, id))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getTeamPracticesByTeam(
+  teamId: string
+): Promise<TeamPractice[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(teamPractices)
+    .where(eq(teamPractices.teamId, teamId))
+    .orderBy(desc(teamPractices.practiceDate));
+}
+
+export async function updateTeamPractice(
+  id: string,
+  updates: Partial<InsertTeamPractice>
+): Promise<TeamPractice | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  await db
+    .update(teamPractices)
+    .set({ ...updates, updatedAt: new Date() })
+    .where(eq(teamPractices.id, id));
+  return getTeamPractice(id);
+}
+
+export async function deleteTeamPractice(id: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  await db.delete(teamPractices).where(eq(teamPractices.id, id));
 }
 
